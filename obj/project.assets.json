@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Suporte Neurograff\\source\\repos\\NeuroApp\\NeuroApp.csproj",
+      "projectUniqueName": "C:\\Users\\Suporte Neurograff\\Source\\Repos\\IgorYanko\\Support-Neuro\\NeuroApp.csproj",
       "projectName": "NeuroApp",
-      "projectPath": "C:\\Users\\Suporte Neurograff\\source\\repos\\NeuroApp\\NeuroApp.csproj",
+      "projectPath": "C:\\Users\\Suporte Neurograff\\Source\\Repos\\IgorYanko\\Support-Neuro\\NeuroApp.csproj",
       "packagesPath": "C:\\Users\\Suporte Neurograff\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Suporte Neurograff\\source\\repos\\NeuroApp\\obj\\",
+      "outputPath": "C:\\Users\\Suporte Neurograff\\Source\\Repos\\IgorYanko\\Support-Neuro\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Suporte Neurograff\\AppData\\Roaming\\NuGet\\NuGet.Config",

@@ -1,0 +1,108 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Suporte Neurograff\\source\\repos\\IgorYanko\\Support-Neuro\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{1B7A4B36-25EF-4D4B-A1BC-FC61B644689B}|NeuroApp.csproj|c:\\users\\suporte neurograff\\source\\repos\\igoryanko\\support-neuro\\mainwindow.xaml||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{1B7A4B36-25EF-4D4B-A1BC-FC61B644689B}|NeuroApp.csproj|solutionrelative:mainwindow.xaml||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1B7A4B36-25EF-4D4B-A1BC-FC61B644689B}|NeuroApp.csproj|c:\\users\\suporte neurograff\\source\\repos\\igoryanko\\support-neuro\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1B7A4B36-25EF-4D4B-A1BC-FC61B644689B}|NeuroApp.csproj|solutionrelative:mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1B7A4B36-25EF-4D4B-A1BC-FC61B644689B}|NeuroApp.csproj|c:\\users\\suporte neurograff\\source\\repos\\igoryanko\\support-neuro\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1B7A4B36-25EF-4D4B-A1BC-FC61B644689B}|NeuroApp.csproj|solutionrelative:user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1B7A4B36-25EF-4D4B-A1BC-FC61B644689B}|NeuroApp.csproj|c:\\users\\suporte neurograff\\source\\repos\\igoryanko\\support-neuro\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{1B7A4B36-25EF-4D4B-A1BC-FC61B644689B}|NeuroApp.csproj|solutionrelative:mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "User.cs",
+              "DocumentMoniker": "C:\\Users\\Suporte Neurograff\\Source\\Repos\\IgorYanko\\Support-Neuro\\User.cs",
+              "RelativeDocumentMoniker": "User.cs",
+              "ToolTip": "C:\\Users\\Suporte Neurograff\\Source\\Repos\\IgorYanko\\Support-Neuro\\User.cs",
+              "RelativeToolTip": "User.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAxwBMAAAA6AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-13T17:30:41.891Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\Suporte Neurograff\\source\\repos\\IgorYanko\\Support-Neuro\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "MainWindow.xaml",
+              "ToolTip": "C:\\Users\\Suporte Neurograff\\source\\repos\\IgorYanko\\Support-Neuro\\MainWindow.xaml",
+              "RelativeToolTip": "MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2024-11-13T12:52:45.037Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "FloatingWindowState": {
+        "Id": "00d913af-b05b-478b-b3ec-2bc0ad9a40e2",
+        "Display": 0,
+        "X": 749,
+        "Y": 310,
+        "Width": 993,
+        "Height": 480,
+        "WindowState": 2
+      },
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Suporte Neurograff\\source\\repos\\IgorYanko\\Support-Neuro\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\Suporte Neurograff\\source\\repos\\IgorYanko\\Support-Neuro\\MainWindow.xaml.cs",
+              "RelativeToolTip": "MainWindow.xaml.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAAABwAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-13T12:52:44.074Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\Suporte Neurograff\\source\\repos\\IgorYanko\\Support-Neuro\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "MainWindow.xaml",
+              "ToolTip": "C:\\Users\\Suporte Neurograff\\source\\repos\\IgorYanko\\Support-Neuro\\MainWindow.xaml",
+              "RelativeToolTip": "MainWindow.xaml",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAACAAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2024-11-13T12:52:54.112Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

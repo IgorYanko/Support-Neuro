@@ -19,17 +19,39 @@ namespace NeuroApp
         public MainWindow()
         {
             InitializeComponent();
-            StackPanel stackPanel = new();
-            Image logoNeuro = new();
-
-            logoNeuro.Source = new BitmapImage(new Uri("", UriKind.Relative));
-
-            stackPanel.Children.Add(logoNeuro);
-            stackPanel.Children.Add(new TextBox { Text = "User" });
-            stackPanel.Children.Add(new TextBox { Text = "Senha" });
-            stackPanel.Children.Add(new Button { Content = "Login" });
-
-            this.Content = stackPanel;
         }
+
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                TextBlock placeholder = (TextBlock)textBox.Tag;
+
+                placeholder.Visibility = string.IsNullOrEmpty(textBox.Text) ? Visibility.Visible : Visibility.Hidden;
+            }
+        }
+
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is PasswordBox passwordBox)
+            {
+                TextBlock placeholder = (TextBlock)passwordBox.Tag;
+
+                placeholder.Visibility = string.IsNullOrEmpty(passwordBox.Password) ? Visibility.Visible : Visibility.Hidden;
+            }
+        }
+
+
+        private void Login(object sender, RoutedEventArgs e)
+        {
+            User user = new();
+
+            user.userName = txtUser.Text;
+            user.Password = txtPassword.Password;
+
+            //função de database
+        }
+
     }
 }
