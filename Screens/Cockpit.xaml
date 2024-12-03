@@ -1,0 +1,79 @@
+﻿<UserControl x:Class="NeuroApp.Cockpit"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:NeuroApp"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="OrderList" ItemsSource="{Binding OrderServices}">
+                <ItemsControl.Template>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <StackPanel Orientation="Horizontal" Background="LightGray">
+                            <TextBlock Text="Cliente" Width="150" FontWeight="Bold"/>
+                            <TextBlock Text="Nº da OS" Width="100" FontWeight="Bold"/>
+                            <TextBlock Text="Data de Chegada" Width="150" FontWeight="Bold"/>
+                            <TextBlock Text="Status" Width="100" FontWeight="Bold"/>
+                            <TextBlock Text="Garantia" Width="100" FontWeight="Bold"/>
+                            <TextBlock Text="Observação" Width="100"/>
+                        </StackPanel>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="Gray" BorderThickness="0,0,0,1" Padding="5">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Customer}" Width="150"/>
+                                <TextBlock Text="{Binding osNumber}" Width="100"/>
+                                <TextBlock Text="{Binding arrivalDate, StringFormat=d}" Width="150"/>
+                                <TextBlock Text="{Binding Status_}" Width="100"/>
+                                <TextBlock Text="{Binding IsGuarantee}" Width="100"/>
+                                <TextBlock Text="{Binding Observation}" Width="100"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <Button x:Name="btnOpenOsCreator" Content="Nova Os" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,10,0,10" Width="100" Click="OpenPopup"/>
+
+        <Popup x:Name="PopupOs" StaysOpen="False" Placement="Center" PlacementTarget="{Binding ElementName=btnOpenOsCreator}">
+            <Border Background="White" BorderBrush="Black" BorderThickness="1" Padding="10">
+                <StackPanel Width="200">
+                    <TextBlock Text="Nova OS" FontWeight="Bold" Margin="0,0,0,10" HorizontalAlignment="Center"/>
+
+                    <TextBlock Text="Cliente:"/>
+                    <TextBox x:Name="TxtCustomer"/>
+
+                    <TextBlock Text="Número da OS:"/>
+                    <TextBox x:Name="TxtNumberOs"/>
+
+                    <TextBlock Text="Data de Chegada:"/>
+                    <DatePicker x:Name="TxtArrivalDate" DisplayDate="{x:Static sys:DateTime.Today}"/>
+
+                    <GroupBox Header="Garantia" Width="200" Height="60" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel>
+                            <RadioButton x:Name="GuaranteeYes" Content="Sim" GroupName="Group1"/>
+                            <RadioButton x:Name="GuaranteeNo" Content="Não" GroupName="Group1"/>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <TextBlock Text="Observação:"/>
+                    <TextBox x:Name="TxtObservation" TextWrapping="Wrap"/>
+
+                    <StackPanel>
+                        <Button Content="Criar" Margin="0,10,0,0" Click="CreateOs"/>
+                        <Button Content="Limpar" Margin="0,5,0,0" Click="CleanUp"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+
+</UserControl>

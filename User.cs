@@ -8,15 +8,16 @@ namespace NeuroApp
 {
     public class User
     {
-        public enum PermissionLevel
+        public enum Function
         {
-            low = 1,
-            medium = 2,
-            high = 3
+            adm = 4,
+            fin = 3,
+            eng = 2,
+            sup = 1
         }
 
-        public string userName { get; set; }
+        public string UserName { get; set; }
         public string Password { get; set; }
-        public PermissionLevel permissionLevel { get; set; }
+        public Function function { get; set; }
     }
 }

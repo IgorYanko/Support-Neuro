@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 C:\Users\Suporte Neurograff\Source\Repos\IgorYanko\Support-Neuro\App.xaml
-11407045341
-
-5-1105580918
-198-556154604
-MainWindow.xaml;
+7-1201969489
+3-540469565
+18474973473
+216750461983
+HomeScreens\AdmHomeScreen.xaml;LoginScreen.xaml;MainWindow.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\Finances.xaml;Screens\ServiceOrders.xaml;
 
 False
 

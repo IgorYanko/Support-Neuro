@@ -1,0 +1,20 @@
+﻿NeuroApp
+1.0.0.0
+
+winexe
+C#
+.cs
+C:\Users\Suporte Neurograff\Source\Repos\IgorYanko\Support-Neuro\obj\Debug\net8.0-windows\
+NeuroApp
+none
+false
+TRACE;DEBUG;NET;NET8_0;NETCOREAPP
+C:\Users\Suporte Neurograff\Source\Repos\IgorYanko\Support-Neuro\App.xaml
+7-1201969489
+3-540469565
+20517370859
+216750461983
+HomeScreens\AdmHomeScreen.xaml;LoginScreen.xaml;MainWindow.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\Finances.xaml;Screens\ServiceOrders.xaml;
+
+False
+

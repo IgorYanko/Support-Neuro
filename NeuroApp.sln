@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35303.130
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeuroApp", "NeuroApp.csproj", "{1B7A4B36-25EF-4D4B-A1BC-FC61B644689B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeuroApp", "NeuroApp.csproj", "{1B7A4B36-25EF-4D4B-A1BC-FC61B644689B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
