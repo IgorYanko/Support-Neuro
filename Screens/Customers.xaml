@@ -3,27 +3,31 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
              xmlns:local="clr-namespace:NeuroApp.Screens"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Loaded="Window_Loaded">
+
+
+    <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <ListView x:Name="ClientesListView">
+        <ListView Loaded="Window_Loaded" x:Name="ClientesListView" ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                  ScrollViewer.VerticalScrollBarVisibility="Hidden" MouseDoubleClick="ClientesListView_DoubleClick">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Nome" DisplayMemberBinding="{Binding name}" Width="150"/>
-                    <GridViewColumn Header="Tipo" DisplayMemberBinding="{Binding type}" Width="100"/>
-                    <GridViewColumn Header="Natureza" DisplayMemberBinding="{Binding nature}" Width="150"/>
-                    <GridViewColumn Header="CNPJ/CPF" DisplayMemberBinding="{Binding cnpj}" Width="150"/>
+                    <GridViewColumn Header="Nome"  DisplayMemberBinding="{Binding name}" Width="150"/>
+                   <!-- <GridViewColumn Header="Tipo" DisplayMemberBinding="{Binding Type}" Width="100"/>-->
+                    <GridViewColumn Header="Natureza" DisplayMemberBinding="{Binding Nature}" Width="90"/>
+                    <GridViewColumn Header="CNPJ/CPF" DisplayMemberBinding="{Binding CpfOrCnpj}" Width="100"/>
                 </GridView>
             </ListView.View>
         </ListView>
 
-        <wv2:WebView2 x:Name="ClienteWebView" Grid.Column="1"/>
+        <Frame x:Name="ClientFrame" Margin="10" Grid.Column="1">
+            
+        </Frame>
     </Grid>
 </UserControl>

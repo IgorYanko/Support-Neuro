@@ -18,14 +18,8 @@ namespace NeuroApp
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 
-            string apiKey = configuration["ApiSettings:SensioApiKey"];
+            _apiService = new SensioApiService(configuration);
 
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                throw new InvalidOperationException("Chave da API não configurada.");
-            }
-
-            //_apiService = new SensioApiService();
         }
 
         private void OpenPopup(object sender, RoutedEventArgs e)

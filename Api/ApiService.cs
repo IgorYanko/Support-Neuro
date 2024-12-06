@@ -9,31 +9,52 @@ namespace NeuroApp.Api
     public class SensioApiService
     {
         private readonly HttpClient _httpClient;
+        private readonly string _baseUrl;
+        private readonly string _token;
 
         public SensioApiService(IConfiguration configuration)
         {
-            var apiSettings = configuration.GetSection("AppSettings");
-            string token = apiSettings.GetValue<string>("SensioApiKey");
-            string baseUrl = apiSettings.GetValue<string>("BaseUrl");
+            _token = configuration.GetValue<string>("ApiSettings:SensioApiKey");
+            _baseUrl = configuration.GetValue<string>("ApiSettings:BaseUrl");
 
-            _httpClient = new HttpClient
+            if (string.IsNullOrEmpty(_baseUrl))
             {
-                BaseAddress = new Uri("baseUrl")
+                throw new ArgumentNullException(nameof(_baseUrl), "Base URL não configurado ou está vazio.");
+            }
+
+            var handler = new HttpClientHandler
+            {
+                AllowAutoRedirect = false
             };
 
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            _httpClient = new HttpClient();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
         }
 
         public async Task<string> GetDataAsync(string endpoint)
         {
             try
             {
-                HttpResponseMessage response = await _httpClient.GetAsync(endpoint);
+                var fullUri = $"{_baseUrl}{endpoint}";
+
+                HttpResponseMessage response = await _httpClient.GetAsync(fullUri);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    string data = await response.Content.ReadAsStringAsync();
-                    return data;
+                    string contentType = response.Content.Headers.ContentType?.MediaType;
+                    
+                    if (contentType != null && contentType.Contains("application/json"))
+                    {
+                        string data = await response.Content.ReadAsStringAsync();
+                        return data;
+                    }
+                    else
+                    {
+                        string htmlContent = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine($"Resposta não é JSON: {htmlContent}");
+
+                        throw new Exception($"Resposta da API não é JSON. Conteúdo recebido: {htmlContent.Substring(0, 500)}");
+                    }
                 }
                 else
                 {

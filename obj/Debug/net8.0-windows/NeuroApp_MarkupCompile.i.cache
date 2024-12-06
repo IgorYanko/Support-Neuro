@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 C:\Users\Suporte Neurograff\Source\Repos\IgorYanko\Support-Neuro\App.xaml
-7-1201969489
+8349329530
 3-540469565
-20517370859
+22228474030
 216750461983
-HomeScreens\AdmHomeScreen.xaml;LoginScreen.xaml;MainWindow.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\Finances.xaml;Screens\ServiceOrders.xaml;
+HomeScreens\AdmHomeScreen.xaml;LoginScreen.xaml;MainWindow.xaml;Screens\ClientPage.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\Finances.xaml;Screens\ServiceOrders.xaml;
 
-False
+True
 
