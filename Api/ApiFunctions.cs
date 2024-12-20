@@ -8,17 +8,24 @@ namespace NeuroApp.Api
 {
     public static class ApiFunctions
     {
-        public static List<TEnum> ConvertStringListToEnumList<TEnum>(List<string> values) where TEnum : struct, Enum
+        public static bool AreAnyPropertiesNullOrEmpty(object obj, string defaultValue = "---")
         {
-            if (values == null || !values.Any())
+            if (obj == null) return true;
+
+            var properties = obj.GetType().GetProperties()
+                .Where(p => p.CanRead && p.CanWrite);
+
+            foreach (var property in properties)
             {
-                return new List<TEnum>();
+                var value = property.GetValue(obj);
+
+                if (value == null || (value is string str && string.IsNullOrWhiteSpace(str)))
+                {
+                    property.SetValue(obj, defaultValue);
+                }
             }
 
-            return values
-            .Select(value => Enum.TryParse<TEnum>(value, true, out var result) ? result : default)
-            .Where(enumValue => !EqualityComparer<TEnum>.Default.Equals(enumValue, default))
-            .ToList();
+            return true;
         }
     }
 }

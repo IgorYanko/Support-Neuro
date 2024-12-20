@@ -70,7 +70,6 @@ namespace NeuroApp
             set => SetProperty(ref _currentView, value);
         }
 
-        public ICommand ShowLoginScreen_ { get; }
         public ICommand ShowCockpitScreen_ { get; }
         public ICommand ShowCustomersScreen_ { get; }
         public ICommand ShowFinancesScreen_ { get; }
@@ -78,18 +77,12 @@ namespace NeuroApp
 
         public MainViewModel()
         {
-            ShowLoginScreen_ = new RelayCommand(ShowLoginScreen);
             ShowCockpitScreen_ = new RelayCommand(ShowCockpitScreen);
             ShowCustomersScreen_ = new RelayCommand(ShowCustomersScreen);
             ShowFinancesScreen_ = new RelayCommand(ShowFinancesScreen);
             ShowSoScreen_ = new RelayCommand(ShowSoScreen);
 
-            ShowLoginScreen();
-        }
-
-        private void ShowLoginScreen()
-        {
-            CurrentView = new LoginScreen();
+            ShowHomeScreen();
         }
 
         private void ShowCockpitScreen()
@@ -110,6 +103,11 @@ namespace NeuroApp
         private void ShowSoScreen()
         {
             CurrentView = new Screens.ServiceOrders();
+        }
+
+        private void ShowHomeScreen()
+        {
+            CurrentView = new HomeScreen(this);
         }
     }
 }

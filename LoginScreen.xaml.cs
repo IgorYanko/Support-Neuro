@@ -11,75 +11,100 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using MaterialDesignThemes.Wpf;
 
 namespace NeuroApp
 {
     /// <summary>
-    /// Lógica interna para TelaLogin.xaml
+    /// Tela inicial para Login no app
     /// </summary>
-    public partial class LoginScreen : UserControl
+    public partial class LoginScreen : Window
     {
+        private readonly MainViewModel _mainViewModel;
+
         public LoginScreen()
         {
             InitializeComponent();
+            _mainViewModel = new MainViewModel();
+            DataContext = _mainViewModel;
         }
 
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        public LoginScreen(MainViewModel mainViewModel)
         {
-            if (sender is TextBox textBox)
-            {
-                TextBlock placeholder = (TextBlock)textBox.Tag;
-
-                placeholder.Visibility = string.IsNullOrEmpty(textBox.Text) ? Visibility.Visible : Visibility.Hidden;
-            }
+            InitializeComponent();
+            _mainViewModel = mainViewModel;
         }
 
-        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        public bool IsDarkTheme { get; set; }
+        private readonly PaletteHelper _paletteHelper = new();
+
+        private void BtnExit_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is PasswordBox passwordBox)
-            {
-                TextBlock placeholder = (TextBlock)passwordBox.Tag;
-                placeholder.Visibility = string.IsNullOrEmpty(passwordBox.Password) ? Visibility.Visible : Visibility.Hidden;
-                
-                passwordTextBox.Text = passwordBox.Password;
-            }
+            Application.Current.Shutdown();
         }
 
-        private void TogglePasswordVisibility(object sender, RoutedEventArgs e)
+        private void toggleTheme(object sender, RoutedEventArgs e)
         {
-            bool isChecked = (sender as CheckBox)?.IsChecked == true;
+            ITheme theme = _paletteHelper.GetTheme();
 
-            passwordTextBox.Visibility = isChecked ? Visibility.Visible : Visibility.Collapsed;
-            txtPassword.Visibility = isChecked ? Visibility.Collapsed : Visibility.Visible;
-
-            if (isChecked)
+            if (IsDarkTheme = theme.GetBaseTheme() == BaseTheme.Dark)
             {
-                passwordTextBox.Text = txtPassword.Password;
+                IsDarkTheme = false;
+                theme.SetBaseTheme(Theme.Light);
             }
             else
             {
-                txtPassword.Password = passwordTextBox.Text;
+                IsDarkTheme = true;
+                theme.SetBaseTheme(Theme.Dark);
+            }
+            
+            _paletteHelper.SetTheme(theme);
+        }
+
+        protected void Card_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            base.OnMouseLeftButtonDown(e);
+            DragMove();
+        }
+
+        private void ButtonLogin_Click(object sender, RoutedEventArgs e)
+        {
+            if (Login())
+            {
+                MainWindow mainWindow = new();
+                mainWindow.Show();
+                this.Close();
+            }
+            else
+            {
+                txtUser.Clear();
+                txtPassword.Clear();
             }
         }
 
-
-        private void Login(object sender, RoutedEventArgs e)
+        private bool Login()
         {
-            MainViewModel mainViewModel = (MainViewModel)this.DataContext;
+            string username = txtUser.Text;
+            string password = txtPassword.Password;
 
-            User user = new();
-            user.UserName = txtUser.Text;
-            user.Password = txtPassword.Password;
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                MessageBox.Show("Preencha os campos de Login!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
 
+            User user = new() { UserName = username, Password = password};
             DatabaseActions databaseActions = new();
+
             bool loginSuccess = databaseActions.userLogin(user);
 
-            if (/*loginSuccess*/1 > 0) mainViewModel.CurrentView = new AdmHomeScreen();
-            else MessageBox.Show("Credenciais Incorretas!");
-            txtUser.Clear();
-            txtPassword.Clear();
-            passwordTextBox.Clear();
-        }
+            if (/*!loginSuccess*/ 1 < 0)
+            {
+                MessageBox.Show("Credenciais incorretas!", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
 
+            return true;
+        }
     }
 }

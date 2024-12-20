@@ -6,74 +6,119 @@
              xmlns:local="clr-namespace:NeuroApp"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="750" d:DesignWidth="450">
 
-    <Grid>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <ItemsControl x:Name="OrderList" ItemsSource="{Binding OrderServices}">
-                <ItemsControl.Template>
-                    <ControlTemplate TargetType="ItemsControl">
-                        <StackPanel Orientation="Horizontal" Background="LightGray">
-                            <TextBlock Text="Cliente" Width="150" FontWeight="Bold"/>
-                            <TextBlock Text="Nº da OS" Width="100" FontWeight="Bold"/>
-                            <TextBlock Text="Data de Chegada" Width="150" FontWeight="Bold"/>
-                            <TextBlock Text="Status" Width="100" FontWeight="Bold"/>
-                            <TextBlock Text="Garantia" Width="100" FontWeight="Bold"/>
-                            <TextBlock Text="Observação" Width="100"/>
-                        </StackPanel>
-                    </ControlTemplate>
-                </ItemsControl.Template>
+    <Grid Background="#F9F9F9">
+            <DataGrid x:Name="DataGridSales" 
+                    AutoGenerateColumns="False" 
+                    ItemsSource="{Binding SalesData}" 
+                    ColumnHeaderHeight="50" 
+                    Loaded="UserControl_Loaded"
+                    HeadersVisibility="Column"
+                    RowHeaderWidth="0"
+                    CanUserSortColumns="False"
+                    CanUserResizeColumns="False"
+                    CanUserResizeRows="False"
+                    Style="{DynamicResource MaterialDesignDataGrid}"
+                    RowBackground="{DynamicResource MaterialDesignBackground}"
+                    AlternatingRowBackground="{DynamicResource MaterialDesignPaper}">
 
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border BorderBrush="Gray" BorderThickness="0,0,0,1" Padding="5">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding Customer}" Width="150"/>
-                                <TextBlock Text="{Binding osNumber}" Width="100"/>
-                                <TextBlock Text="{Binding arrivalDate, StringFormat=d}" Width="150"/>
-                                <TextBlock Text="{Binding Status_}" Width="100"/>
-                                <TextBlock Text="{Binding IsGuarantee}" Width="100"/>
-                                <TextBlock Text="{Binding Observation}" Width="100"/>
-                            </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="FontSize" Value="16"/>
+                        <Setter Property="FontFamily" Value="Arial"/>
+                        <Setter Property="FontWeight" Value="DemiBold"/>
+                        <Setter Property="Foreground" Value="Black"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    </Style>
+                </DataGrid.Resources>
 
-        <Button x:Name="btnOpenOsCreator" Content="Nova Os" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,10,0,10" Width="100" Click="OpenPopup"/>
+                <DataGrid.Columns>
 
-        <Popup x:Name="PopupOs" StaysOpen="False" Placement="Center" PlacementTarget="{Binding ElementName=btnOpenOsCreator}">
-            <Border Background="White" BorderBrush="Black" BorderThickness="1" Padding="10">
-                <StackPanel Width="200">
-                    <TextBlock Text="Nova OS" FontWeight="Bold" Margin="0,0,0,10" HorizontalAlignment="Center"/>
+                    <DataGridTextColumn Header="Nº OS" Width="Auto" Binding="{Binding code}" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                    <TextBlock Text="Cliente:"/>
-                    <TextBox x:Name="TxtCustomer"/>
+                    <DataGridTextColumn Header="Cliente" Width="Auto" Binding="{Binding personName}" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                    <TextBlock Text="Número da OS:"/>
-                    <TextBox x:Name="TxtNumberOs"/>
+                    <DataGridTextColumn Header="Data de Chegada" Width="Auto" Binding="{Binding DateCreated, StringFormat=\{0:dd/MM/yyyy\}}" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                    <TextBlock Text="Data de Chegada:"/>
-                    <DatePicker x:Name="TxtArrivalDate" DisplayDate="{x:Static sys:DateTime.Today}"/>
+                    <DataGridTextColumn Header="Tipo" Width="Auto" Binding="{Binding Type}" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                    <GroupBox Header="Garantia" Width="200" Height="60" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <StackPanel>
-                            <RadioButton x:Name="GuaranteeYes" Content="Sim" GroupName="Group1"/>
-                            <RadioButton x:Name="GuaranteeNo" Content="Não" GroupName="Group1"/>
-                        </StackPanel>
-                    </GroupBox>
+                    <DataGridTextColumn Header="Status" Width="Auto" Binding="{Binding status}" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                    <TextBlock Text="Observação:"/>
-                    <TextBox x:Name="TxtObservation" TextWrapping="Wrap"/>
+                    <DataGridTemplateColumn Header="Tag" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <Border Background="GreenYellow"
+                                            CornerRadius="5"
+                                            Padding="5,2"
+                                            Margin="2"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Tags[0].Name}"
+                                                Foreground="#353535"
+                                                FontWeight="SemiBold"/>
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
-                    <StackPanel>
-                        <Button Content="Criar" Margin="0,10,0,0" Click="CreateOs"/>
-                        <Button Content="Limpar" Margin="0,5,0,0" Click="CleanUp"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-        </Popup>
+                    <DataGridTextColumn Header="Observações" Width="350" IsReadOnly="False">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                </DataGrid.Columns>
+
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Height" Value="65"/>
+                        <!--<Setter Property="Background" Value="{Binding}"/>-->
+                        <!--<Setter Property=""/>-->
+                        <!--<Setter Property=""/>-->
+                        <!--<Setter Property=""/>-->
+                    </Style>
+                </DataGrid.RowStyle>
+            </DataGrid>
     </Grid>
 
 </UserControl>

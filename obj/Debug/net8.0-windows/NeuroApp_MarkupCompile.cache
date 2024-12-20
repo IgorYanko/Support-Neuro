@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\Users\Suporte Neurograff\Source\Repos\IgorYanko\Support-Neuro\obj\Debug\net8.0-windows\
+C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\
 NeuroApp
 none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
-C:\Users\Suporte Neurograff\Source\Repos\IgorYanko\Support-Neuro\App.xaml
-8349329530
-3-540469565
-20186076644
-216750461983
-HomeScreens\AdmHomeScreen.xaml;LoginScreen.xaml;MainWindow.xaml;Screens\ClientPage.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\Finances.xaml;Screens\ServiceOrders.xaml;
+C:\Users\supor\Source\Repos\Support-Neuro\App.xaml
+9-505755708
+3-720092851
+251967924429
+221-1984524683
+Controls\Backbar.xaml;LoginScreen.xaml;MainWindow.xaml;Screens\ClientPage.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\Finances.xaml;Screens\HomeScreen.xaml;Screens\ServiceOrders.xaml;
 
 False
 

@@ -11,6 +11,8 @@ namespace NeuroApp.Screens
 {
     public partial class Customers : UserControl
     {
+        private List<Person> _clientes;
+        private List<PersonType> _tipos;
 
         public Customers()
         {
@@ -35,9 +37,13 @@ namespace NeuroApp.Screens
                 
                 var response = await apiService.GetDataAsync(endpoint);
                 var apiResponse = JsonSerializer.Deserialize<ApiResponse>(response, options);
-                var clientes = apiResponse.Response;             
+                
+                _clientes = apiResponse.Response
+                                        .Where(p => p.Type != null && p.Type.Contains("Cliente"))
+                                        .ToList();    
+                ClientesListView.ItemsSource = _clientes;
 
-                ClientesListView.ItemsSource = clientes;
+                _tipos = Enum.GetValues(typeof(PersonType)).Cast<PersonType>().ToList();
             }
             catch (Exception ex)
             {
@@ -50,7 +56,7 @@ namespace NeuroApp.Screens
         {
             if (ClientesListView.SelectedItem != null)
             {
-                var selectedClient = ClientesListView.SelectedItem.ToString();
+                var selectedClient = (Person)ClientesListView.SelectedItem;
 
                 ClientFrame.Navigate(new ClientPage(selectedClient));
             }
@@ -59,6 +65,20 @@ namespace NeuroApp.Screens
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             await FillListViewAsync();
+        }
+
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string searchString = SearchBox.Text;
+
+            if (_clientes == null || _clientes.Count == 0) return;
+
+            var filteredClients = _clientes
+                .Where(c => c.name != null &&
+                            c.name.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+
+            ClientesListView.ItemsSource = filteredClients;
         }
     }
 }

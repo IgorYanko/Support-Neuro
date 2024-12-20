@@ -1,26 +1,19 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using System.Windows;
+using MahApps.Metro.Controls;
 
 namespace NeuroApp
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
-        private ResponsiveWindow responsiveWindow;
-
         public MainWindow()
         {
             InitializeComponent();
-            var viewModel = new MainViewModel();
-            DataContext = viewModel;
+            MainViewModel mainViewModel = new();
+            DataContext = mainViewModel;
 
-            responsiveWindow = new ResponsiveWindow();
-
-            this.SizeChanged += (s, e) =>
-            {
-                responsiveWindow.responsiveBigButtons.WindowHeight = this.ActualHeight;
-                responsiveWindow.responsiveBigButtons.WindowWidth = this.ActualWidth;
-                viewModel._ResponsiveBigButtons = responsiveWindow.responsiveBigButtons;
-            };
+            HomeScreen homeScreen = new(mainViewModel);
+            mainViewModel.CurrentView = homeScreen;
         }
     }
 }

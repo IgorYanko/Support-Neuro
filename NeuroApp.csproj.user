@@ -7,13 +7,16 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Controls\Backbar.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Screens\ClientPage.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Screens\Cockpit.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="HomeScreens\AdmHomeScreen.xaml.cs">
+    <Compile Update="Screens\HomeScreen.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="LoginScreen.xaml.cs">
@@ -30,13 +33,16 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Controls\Backbar.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Screens\ClientPage.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Screens\Cockpit.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="HomeScreens\AdmHomeScreen.xaml">
+    <Page Update="Screens\HomeScreen.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="MainWindow.xaml">

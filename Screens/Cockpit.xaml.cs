@@ -1,71 +1,72 @@
-﻿using System.Windows;
+﻿using System.Collections.ObjectModel;
+using System.Drawing;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
 using NeuroApp.Api;
+using NeuroApp.Classes;
 
 namespace NeuroApp
 {
     public partial class Cockpit : UserControl
     {
-        private readonly SensioApiService _apiService;
+        public ObservableCollection<Sales> SalesData { get; set; } = new ObservableCollection<Sales>();
 
         public Cockpit()
         {
             InitializeComponent();
-
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
-
-            _apiService = new SensioApiService(configuration);
-
         }
 
-        private void OpenPopup(object sender, RoutedEventArgs e)
+        public async Task<ObservableCollection<Sales>> FetchSalesDataAsync()
         {
-            PopupOs.IsOpen = true;
-        }
-
-        private void CreateOs(object sender, RoutedEventArgs e)
-        {
-            bool Warranty = GuaranteeYes.IsChecked == true ? true : false;
-
-            var NewServiceOrder = new ServiceOrder(
-                customer: TxtCustomer.Text,
-                osNumber: int.Parse(TxtNumberOs.Text),
-                arrivalDate: TxtArrivalDate.SelectedDate,
-                observation: TxtObservation.Text,
-                isGuarantee: Warranty
-            );
-
-            if (NewServiceOrder != null)
+            try
             {
-                DatabaseActions database = new();
+                var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json").Build();
 
-                if (database.BuildOS(NewServiceOrder))
+                var apiService = new SensioApiService(configuration);
+                var endpoint = "sales/list/1";
+
+                var options = new JsonSerializerOptions
                 {
-                    MessageBox.Show("OS criada com sucesso!");
-                }
-                else
-                {
-                    MessageBox.Show("Falha na criação da OS!");
-                }
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+                };
+
+                var response = await apiService.GetDataAsync(endpoint);
+                var apiResponse = JsonSerializer.Deserialize<ApiResponseSales>(response, options);
+
+                DateTime maxDate = DateTime.Today.AddDays(-30);
+
+                var filteredSales = apiResponse.Response
+                    .Where(sale => sale.DateCreated >= maxDate && sale.DateCreated <= DateTime.Today)
+                    .ToList();
+
+                return new ObservableCollection<Sales>(filteredSales ?? new List<Sales>());
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Preencha os campos obrigatórios!");
+                Console.WriteLine($"Erro ao preencher DataGrid: {ex.Message}");
+                return new ObservableCollection<Sales>();
             }
         }
 
-
-        private void CleanUp(object sender, RoutedEventArgs e)
+        private async void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            TxtCustomer.Text = String.Empty;
-            TxtNumberOs.Text = String.Empty;
-            TxtArrivalDate.SelectedDate = DateTime.Today;
-            GuaranteeYes.IsChecked = false;
-            GuaranteeNo.IsChecked = false;
+            SalesData = await FetchSalesDataAsync();
+            DataContext = this;
         }
+
+        //private Color ChangeBackgroundColor()
+        //{
+        //    Color green = Color.FromArgb(255,60,179,113);
+        //    Color yellow = Color.FromArgb(255,253,233,16);
+        //    Color red = Color.FromArgb(255,227,38,54);
+        //}
     }
 }

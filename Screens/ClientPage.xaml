@@ -6,30 +6,72 @@
       xmlns:local="clr-namespace:NeuroApp.Screens"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="ClientPage">
+      Title="ClientPage"
+      DataContext="{Binding RelativeSource={RelativeSource Self}}">
 
-    <Grid>
-        <TextBlock Text="{Binding }"/>
-        <DockPanel>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-        </DockPanel>
-        <DockPanel>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>
-            <TextBlock></TextBlock>  
-        </DockPanel>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding Name}" FontSize="24" FontWeight="Bold"
+                   Margin="0,0,0,20"/>
+
+        <TextBlock Grid.ColumnSpan="2" Text="Informações Básicas" FontSize="20" FontWeight="DemiBold" Margin="0,0,0,0"/>
+
+        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,20,0">
+
+            <TextBlock Text="Natureza" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding Nature}" FontSize="15" Margin="0, 0, 0, 10"/>
+            
+            <TextBlock Text="Tipo de pessoa" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding Type}" FontSize="15" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Celular" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding Phone}" FontSize="15" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Contato principal" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding MainContact}" FontSize="15" Margin="0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,20,0">
+            <TextBlock Text="Cpf/Cnjp" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding CpfOrCnpj}" FontSize="15" Margin="0,0,0,10"/>
+            
+            <TextBlock Text="Inscrição estadual" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding IcmsCont}" FontSize="15" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Telefone" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding Cellphone}" FontSize="15" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Email" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding Email}" FontSize="15" Margin="0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,20,0,0">
+            <TextBlock Text="Informações de Endereço" Grid.ColumnSpan="2" FontSize="20" FontWeight="DemiBold" Margin="0,0,0,0"/>
+
+            <TextBlock Text="Endereço" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding Address}" FontSize="15" Margin="0"/>
+
+            <TextBlock Text="CEP" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding Cep}" FontSize="15" Margin="0"/>
+
+            <TextBlock Text="Bairro" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding Neighborhood}" FontSize="15" Margin="0"/>
+
+            <TextBlock Text="Cidade/UF" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding CityUf}" FontSize="15" Margin="0"/>
+
+            <TextBlock Text="País" FontSize="15" FontWeight="DemiBold" Margin="0"/>
+            <TextBlock Text="{Binding Country}" FontSize="15" Margin="0"/>
+        </StackPanel>
     </Grid>
 </Page>

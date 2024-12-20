@@ -16,7 +16,7 @@ namespace NeuroApp.Classes
         Fisica
     }
 
-    public enum Type
+    public enum PersonType
     {
         Cliente,
         Fornecedor,
@@ -48,11 +48,11 @@ namespace NeuroApp.Classes
         {
             get
             {
-                if (!string.IsNullOrEmpty(cnpj))
+                if (!string.IsNullOrEmpty(cnpj) && cnpj != "---")
                 {
                     return string.Format("{0:00\\.000\\.000/0000-00}", long.Parse(cnpj));
                 }
-                else if (!string.IsNullOrEmpty(cpf))
+                else if (!string.IsNullOrEmpty(cpf) && cnpj != "---")
                 {
                     return string.Format("{0:000\\.000\\.000-00}", long.Parse(cpf));
                 }
@@ -139,6 +139,12 @@ namespace NeuroApp.Classes
     {
         [JsonPropertyName("response")]
         public List<Person> Response { get; set; }
+    }
+
+    public class ApiResponseSales
+    {
+        [JsonPropertyName("response")]
+        public List<Sales> Response { get; set; }
     }
 
 }
