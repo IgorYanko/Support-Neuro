@@ -55,6 +55,8 @@ namespace NeuroApp
 
     public class MainViewModel : BaseViewModel
     {
+        public ICommand GoBackCommand { get; }
+
         private ResponsiveBigButtons _responsiveBigButtons;
         public ResponsiveBigButtons _ResponsiveBigButtons
         {
@@ -77,37 +79,24 @@ namespace NeuroApp
 
         public MainViewModel()
         {
-            ShowCockpitScreen_ = new RelayCommand(ShowCockpitScreen);
-            ShowCustomersScreen_ = new RelayCommand(ShowCustomersScreen);
-            ShowFinancesScreen_ = new RelayCommand(ShowFinancesScreen);
-            ShowSoScreen_ = new RelayCommand(ShowSoScreen);
+            GoBackCommand = new RelayCommand(
+                ShowHomeScreen,
+                () => CurrentView != null
+            );
+
+            ShowCockpitScreen_ = new RelayCommand(() => CurrentView = new Cockpit());
+            ShowCustomersScreen_ = new RelayCommand(() => CurrentView = new Screens.Customers());
+            ShowFinancesScreen_ = new RelayCommand(() => CurrentView = new Cockpit());
+            ShowSoScreen_ = new RelayCommand(() => CurrentView = new Cockpit());
 
             ShowHomeScreen();
         }
 
-        private void ShowCockpitScreen()
-        {
-            CurrentView = new Cockpit();
-        }
-
-        private void ShowCustomersScreen()
-        {
-            CurrentView = new Screens.Customers();
-        }
-
-        private void ShowFinancesScreen()
-        {
-            CurrentView = new Screens.Finances();
-        }
-
-        private void ShowSoScreen()
-        {
-            CurrentView = new Screens.ServiceOrders();
-        }
-
-        private void ShowHomeScreen()
+        public void ShowHomeScreen()
         {
             CurrentView = new HomeScreen(this);
         }
+
+        public ResponsiveBigButtons ResponsiveBigButtons { get; set; }
     }
 }

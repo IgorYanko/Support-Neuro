@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
+﻿using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using MaterialDesignThemes.Wpf;
+using NeuroApp.Classes;
+
 
 namespace NeuroApp
 {
@@ -81,30 +72,55 @@ namespace NeuroApp
                 txtPassword.Clear();
             }
         }
+        private bool ProcessLogin(string username, string password)
+        {
+            User user = new() { UserName = username, Password = password };
+            DatabaseActions databaseActions = new();
+
+            var (loginSuccess, userRole) = databaseActions.userLogin(user);
+
+            if (!loginSuccess)
+            {
+                MessageBox.Show("Credenciais incorretas!", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            PermissionSystem.Instance.SetCurrentUser(new User
+            {
+                UserName = username,
+                function = Enum.Parse<User.Function>(userRole)
+            });
+
+            return true;
+        }
+
+        private bool AreCredentialsValid(string username, string password)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                MessageBox.Show("O campo de usuário não pode estar vazio!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                MessageBox.Show("O campo de senha não pode estar vazio!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
 
         private bool Login()
         {
             string username = txtUser.Text;
             string password = txtPassword.Password;
 
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-            {
-                MessageBox.Show("Preencha os campos de Login!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (!AreCredentialsValid(username, password))
                 return false;
-            }
 
-            User user = new() { UserName = username, Password = password};
-            DatabaseActions databaseActions = new();
-
-            bool loginSuccess = databaseActions.userLogin(user);
-
-            if (/*!loginSuccess*/ 1 < 0)
-            {
-                MessageBox.Show("Credenciais incorretas!", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-
-            return true;
+            return ProcessLogin(username, password);
         }
+
     }
 }

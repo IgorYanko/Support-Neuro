@@ -37,6 +37,8 @@ namespace NeuroApp.Classes
             if (value != null && _nameToValue.TryGetValue(value, out var enumValue))
                 return enumValue;
 
+            return Enum.TryParse("Unknown", true, out T defaultValue) ? defaultValue : throw new JsonException($"Unable to map '{value}' to enum {typeof(T).Name}.");
+            
             throw new JsonException($"Unable to map '{value}' to enum {typeof(T).Name}.");
         }
 

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows;
+using System;
 
 namespace NeuroApp
 {
@@ -8,17 +8,19 @@ namespace NeuroApp
     {
         private double windowHeight;
         private double windowWidth;
+        private const double MinButtonSize = 50;
+        private const double MaxButtonSize = 300;
 
         public double WindowHeight
         {
             get => windowHeight;
             set
             {
-                if (windowHeight != value)
+                if (Math.Abs(windowHeight - value) > 0.1)
                 {
                     windowHeight = value;
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(ButtonSize));
+                    UpdateButtonSize();
                 }
             }
         }
@@ -28,16 +30,33 @@ namespace NeuroApp
             get => windowWidth;
             set
             {
-                if (windowWidth != value)
+                if (Math.Abs(windowWidth - value) > 0.1)
                 {
                     windowWidth = value;
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(ButtonSize));
+                    UpdateButtonSize();
                 }
             }
         }
 
-        public double ButtonSize => Math.Min(WindowHeight, WindowWidth) * 0.35;
+        private double buttonSize;
+        public double ButtonSize
+        {
+            get => buttonSize;
+            private set
+            {
+                if (Math.Abs(buttonSize - value) > 0.1)
+                {
+                    buttonSize = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private void UpdateButtonSize()
+        {
+            ButtonSize = Math.Max(MinButtonSize, Math.Min(MaxButtonSize, Math.Min(WindowHeight, WindowWidth) * 0.35));
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

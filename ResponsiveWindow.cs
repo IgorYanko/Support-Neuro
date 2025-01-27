@@ -9,18 +9,18 @@ namespace NeuroApp
 {
     public class ResponsiveWindow : Window
     {
-            public ResponsiveBigButtons responsiveBigButtons { get; set; }
+            //public ResponsiveBigButtons responsiveBigButtons { get; set; }
 
-            public ResponsiveWindow()
-            {
-                responsiveBigButtons = new ResponsiveBigButtons();
-                DataContext = this;
+            //public ResponsiveWindow()
+            //{
+            //    responsiveBigButtons = new ResponsiveBigButtons();
+            //    DataContext = this;
 
-                this.SizeChanged += (s, e) =>
-                {
-                    responsiveBigButtons.WindowHeight = this.ActualHeight;
-                    responsiveBigButtons.WindowWidth = this.ActualWidth;
-                };
-            }
+            //    this.SizeChanged += (s, e) =>
+            //    {
+            //        responsiveBigButtons.WindowHeight = this.ActualHeight;
+            //        responsiveBigButtons.WindowWidth = this.ActualWidth;
+            //    };
+            //}
     }
 }

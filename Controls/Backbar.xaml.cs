@@ -13,16 +13,42 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace NeuroApp.Screens
+namespace NeuroApp.Controls
 {
-    /// <summary>
-    /// Interação lógica para Backbar.xam
-    /// </summary>
     public partial class Backbar : UserControl
     {
+        public static readonly DependencyProperty GoBackCommandProperty =
+            DependencyProperty.Register(
+                nameof(GoBackCommand),
+                typeof(ICommand),
+                typeof(Backbar),
+                new PropertyMetadata(null));
+
+
+
+        public ICommand GoBackCommand
+        {
+            get => (ICommand)GetValue(GoBackCommandProperty);
+            set => SetValue(GoBackCommandProperty, value);
+        }
+
         public Backbar()
         {
             InitializeComponent();
         }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (GoBackCommand != null && GoBackCommand.CanExecute(null))
+            {
+                GoBackCommand.Execute(null);
+            }
+        }
+
+        private void GetPageName()
+        {
+
+        }
+
     }
 }

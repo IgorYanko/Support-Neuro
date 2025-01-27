@@ -1,60 +1,45 @@
 ﻿using NeuroApp.Screens;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace NeuroApp
 {
-    /// <summary>
-    /// Interação lógica para HomeScreen.xam
-    /// </summary>
     public partial class HomeScreen : UserControl
     {
-        private readonly MainViewModel _mainViewModel;
-
-        public ResponsiveBigButtons responsiveBigButtons { get; set; }
+        //public ResponsiveBigButtons responsiveBigButtons { get; }
 
         public HomeScreen(MainViewModel mainView)
         {
             InitializeComponent();
 
-            _mainViewModel = mainView;
-            DataContext = _mainViewModel;
-
-            responsiveBigButtons = new ResponsiveBigButtons
+            var responsiveBigButtons = new ResponsiveBigButtons
             {
                 WindowHeight = this.Height,
                 WindowWidth = this.Width
             };
 
-            this.SizeChanged += OnSizeChanged;
-        }
+            this.DataContext = new HomeScreenViewModel(mainView, responsiveBigButtons);
 
-        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            responsiveBigButtons.WindowHeight = this.ActualHeight;
-            responsiveBigButtons.WindowWidth = this.ActualWidth;
+            this.SizeChanged += (s, e) =>
+            {
+                responsiveBigButtons.WindowHeight = this.ActualHeight;
+                responsiveBigButtons.WindowWidth = this.ActualWidth;
+            };
         }
+    }
 
-        private void OpenCockpit(object sender, RoutedEventArgs e)
-        {
-            _mainViewModel.CurrentView = new Cockpit();
-        }
+    public class HomeScreenViewModel
+    {
+        public MainViewModel MainViewModel { get; }
+        public ResponsiveBigButtons ResponsiveBigButtons { get; }
 
-        private void OpenCustomers(object sender, RoutedEventArgs e)
+        public HomeScreenViewModel(MainViewModel mainViewModel, ResponsiveBigButtons responsiveBigButtons)
         {
-            _mainViewModel.CurrentView = new Customers();
-        }
-
-        private void OpenFinances(object sender, RoutedEventArgs e)
-        {
-            _mainViewModel.CurrentView = new Finances();
-        }
-
-        private void OpenServiceOrders(object sender, RoutedEventArgs e)
-        {
-            _mainViewModel.CurrentView = new ServiceOrders();
+            MainViewModel = mainViewModel;
+            ResponsiveBigButtons = responsiveBigButtons;
         }
     }
 }

@@ -39,6 +39,8 @@
                 <Setter Property="FontSize" Value="18"/>
                 <Setter Property="Padding" Value="8,5"/>
                 <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="9"/>
+                <Setter Property="Width" Value="{DynamicResource ResponsiveBigButtons}"/>
+                <Setter Property="Height" Value="{DynamicResource ResponsiveBigButtons}"/>
             </Style>
 
             <Style x:Key="RoundedButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
@@ -46,6 +48,9 @@
                 <Setter Property="Foreground" Value="White"/>
                 <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="50"/>
             </Style>
+
+            <local:ResponsiveBigButtons x:Key="ResponsiveBigButtons"/>
         </ResourceDictionary>
     </Application.Resources>
+
 </Application>

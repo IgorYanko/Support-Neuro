@@ -68,6 +68,7 @@ C:\Users\Suporte Neurograff\Source\Repos\IgorYanko\Support-Neuro\obj\Debug\net8.
 C:\Users\supor\Source\Repos\Support-Neuro\bin\Debug\net8.0-windows\runtimes\win-x86\native\WebView2Loader.dll
 C:\Users\supor\Source\Repos\Support-Neuro\bin\Debug\net8.0-windows\runtimes\win-x64\native\WebView2Loader.dll
 C:\Users\supor\Source\Repos\Support-Neuro\bin\Debug\net8.0-windows\runtimes\win-arm64\native\WebView2Loader.dll
+C:\Users\supor\Source\Repos\Support-Neuro\bin\Debug\net8.0-windows\appsettings.json
 C:\Users\supor\Source\Repos\Support-Neuro\bin\Debug\net8.0-windows\NeuroApp.exe
 C:\Users\supor\Source\Repos\Support-Neuro\bin\Debug\net8.0-windows\NeuroApp.deps.json
 C:\Users\supor\Source\Repos\Support-Neuro\bin\Debug\net8.0-windows\NeuroApp.runtimeconfig.json
@@ -139,4 +140,4 @@ C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\refint\NeuroA
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\NeuroApp.pdb
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\NeuroApp.genruntimeconfig.cache
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\ref\NeuroApp.dll
-C:\Users\supor\Source\Repos\Support-Neuro\bin\Debug\net8.0-windows\appsettings.json
+C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\GeneratedInternalTypeHelper.g.cs

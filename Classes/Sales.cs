@@ -60,7 +60,10 @@ namespace NeuroApp.Classes
         OrçamentoRecusado,
 
         [JsonPropertyName("Cancelado")]
-        Cancelado
+        Cancelado,
+
+        [JsonPropertyName("Recusado")]
+        Recusado
     }
 
     public enum NfeStatus
@@ -95,11 +98,28 @@ namespace NeuroApp.Classes
         [JsonConverter(typeof(CustomEnumConverter<SaleType>))]
         public SaleType Type { get; set; } = SaleType.Unknown;
 
+        public string displayType { get; set; }
+
         [JsonConverter(typeof(CustomEnumConverter<Status>))]
         public Status status { get; set; }
 
+        public string displayStatus { get; set; }
+
         [JsonPropertyName("tags")]
         public List<Tag> Tags { get; set; } = new List<Tag>();
+
+        public List<CustomTag> MappedTags { get; set; } = new List<CustomTag>();
+
+        [JsonPropertyName("approved")]
+        public bool approved { get; set; }
+
+        public string? Observation {  get; set; }
+
+        public bool IsManual { get; set; }
+
+        public int Priority { get; set; }
+
+        public DateTime? ApprovedAt { get; set; } 
     }
 
     public class Tag
