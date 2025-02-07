@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Windows.Media;
 
 namespace NeuroApp.Classes
 {
@@ -39,6 +40,9 @@ namespace NeuroApp.Classes
         [JsonPropertyName("Transferência")]
         Transferência,
 
+        [JsonPropertyName("Locação")]
+        Locação,
+
         Unknown
     }
 
@@ -63,7 +67,21 @@ namespace NeuroApp.Classes
         Cancelado,
 
         [JsonPropertyName("Recusado")]
-        Recusado
+        Recusado,
+
+        Emexecução,
+
+        Pausada,
+
+        ControledeQualidade,
+
+        AprovadoQualidade,
+
+        ReprovadoQualidade,   
+
+        EsperandoColeta,
+
+        Unknown
     }
 
     public enum NfeStatus
@@ -76,42 +94,75 @@ namespace NeuroApp.Classes
 
     public class Sales
     {
+        private const int BUSINESS_DAYS_LIMIT = 10;
+        private const int NOT_APPROVED_FLAG = -999;
+
         [JsonPropertyName("_id")]
-        public string _id {  get; set; }
+        public string Id {  get; set; }
 
         [JsonPropertyName("code")]
-        public string code { get; set; }
+        public string Code { get; set; }
 
         [JsonPropertyName("dateCreated")]
         [JsonConverter(typeof(DateConverter))]
         public DateTime DateCreated { get; set; }
 
         [JsonPropertyName("customerId")]
-        public string customerId { get; set; }
+        public string CustomerId { get; set; }
 
         [JsonPropertyName("personName")]
-        public string? personName { get; set; }
+        public string? PersonName { get; set; }
 
         [JsonPropertyName("personRazao")]
-        public string? personRazao { get; set; }
+        public string? PersonRazao { get; set; }
 
         [JsonConverter(typeof(CustomEnumConverter<SaleType>))]
         public SaleType Type { get; set; } = SaleType.Unknown;
 
-        public string displayType { get; set; }
+        public string DisplayType { get; set; }
 
         [JsonConverter(typeof(CustomEnumConverter<Status>))]
-        public Status status { get; set; }
+        public Status Status { get; set; }
 
-        public string displayStatus { get; set; }
+        public string _displayStatus {  get; set; }
+        public string DisplayStatus
+        {
+            get => _displayStatus;
+            set
+            {
+                _displayStatus = value?.Trim() ?? string.Empty;
+
+                if (Enum.TryParse(_displayStatus, true, out Status parsedStatus))
+                {
+                    Status = parsedStatus;
+                }
+            }
+        }
+
+        public static bool IsLocalStatus(string status)
+        {
+            var localStatuses = new HashSet<string>
+            {
+                "Em Execução",
+                "Pausada",
+                "Controle de Qualidade",
+                "Aprovadona Qualidade",
+                "Reprovadona Qualidade",
+                "Esperando Coleta"
+            };
+
+            return localStatuses.Contains(status);
+        }
+
+        public List<string> StatusList { get; } = GetStatusToComboBox.GetStatusToComboBoxList<Status>().GetRange(7, 6);
 
         [JsonPropertyName("tags")]
-        public List<Tag> Tags { get; set; } = new List<Tag>();
+        public List<Tag> Tags { get; set; } = new();
 
-        public List<CustomTag> MappedTags { get; set; } = new List<CustomTag>();
+        public List<CustomTag> MappedTags { get; set; } = new();
 
         [JsonPropertyName("approved")]
-        public bool approved { get; set; }
+        public bool Approved { get; set; }
 
         public string? Observation {  get; set; }
 
@@ -119,7 +170,31 @@ namespace NeuroApp.Classes
 
         public int Priority { get; set; }
 
-        public DateTime? ApprovedAt { get; set; } 
+        public DateTime? ApprovedAt { get; set; }
+
+        public DateTime? Deadline
+        {
+            get
+            {
+                if (!ApprovedAt.HasValue) return null;
+                return BusinessDayCalculator.AddBusinessDays(ApprovedAt.Value, 7);
+            }
+        }
+
+        public bool IsPaused { get; set; }
+
+        public bool IsStatusModified { get; set; } = false;
+
+        public int? RemainingBusinessDays
+        {
+            get
+            {
+                if (!ApprovedAt.HasValue) return NOT_APPROVED_FLAG;
+
+                DateTime finalDate = ApprovedAt.Value.AddDays(BUSINESS_DAYS_LIMIT);
+                return BusinessDayCalculator.CalculateBusinessDays(DateTime.Now, finalDate);
+            }
+        }
     }
 
     public class Tag

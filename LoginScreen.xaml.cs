@@ -6,9 +6,6 @@ using NeuroApp.Classes;
 
 namespace NeuroApp
 {
-    /// <summary>
-    /// Tela inicial para Login no app
-    /// </summary>
     public partial class LoginScreen : Window
     {
         private readonly MainViewModel _mainViewModel;
@@ -26,31 +23,35 @@ namespace NeuroApp
             _mainViewModel = mainViewModel;
         }
 
-        public bool IsDarkTheme { get; set; }
-        private readonly PaletteHelper _paletteHelper = new();
+        /// <summary>
+        /// Parte relacionada ao tema será ignorada na primeira versão
+        /// </summary>
+        //public bool IsDarkTheme { get; set; }
+        //private readonly PaletteHelper _paletteHelper = new();
+        
+        //private void toggleTheme(object sender, RoutedEventArgs e)
+        //{
+        //    ITheme theme = _paletteHelper.GetTheme();
+
+        //    if (IsDarkTheme = theme.GetBaseTheme() == BaseTheme.Dark)
+        //    {
+        //        IsDarkTheme = false;
+        //        theme.SetBaseTheme(Theme.Light);
+        //    }
+        //    else
+        //    {
+        //        IsDarkTheme = true;
+        //        theme.SetBaseTheme(Theme.Dark);
+        //    }
+            
+        //    _paletteHelper.SetTheme(theme);
+        //}
 
         private void BtnExit_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
         }
 
-        private void toggleTheme(object sender, RoutedEventArgs e)
-        {
-            ITheme theme = _paletteHelper.GetTheme();
-
-            if (IsDarkTheme = theme.GetBaseTheme() == BaseTheme.Dark)
-            {
-                IsDarkTheme = false;
-                theme.SetBaseTheme(Theme.Light);
-            }
-            else
-            {
-                IsDarkTheme = true;
-                theme.SetBaseTheme(Theme.Dark);
-            }
-            
-            _paletteHelper.SetTheme(theme);
-        }
 
         protected void Card_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -58,13 +59,12 @@ namespace NeuroApp
             DragMove();
         }
 
-        private void ButtonLogin_Click(object sender, RoutedEventArgs e)
+        private async void ButtonLogin_Click(object sender, RoutedEventArgs e)
         {
-            if (Login())
+            if (await Login())
             {
-                MainWindow mainWindow = new();
-                mainWindow.Show();
-                this.Close();
+                new MainWindow().Show();
+                Close();
             }
             else
             {
@@ -72,46 +72,8 @@ namespace NeuroApp
                 txtPassword.Clear();
             }
         }
-        private bool ProcessLogin(string username, string password)
-        {
-            User user = new() { UserName = username, Password = password };
-            DatabaseActions databaseActions = new();
 
-            var (loginSuccess, userRole) = databaseActions.userLogin(user);
-
-            if (!loginSuccess)
-            {
-                MessageBox.Show("Credenciais incorretas!", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-
-            PermissionSystem.Instance.SetCurrentUser(new User
-            {
-                UserName = username,
-                function = Enum.Parse<User.Function>(userRole)
-            });
-
-            return true;
-        }
-
-        private bool AreCredentialsValid(string username, string password)
-        {
-            if (string.IsNullOrEmpty(username))
-            {
-                MessageBox.Show("O campo de usuário não pode estar vazio!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(password))
-            {
-                MessageBox.Show("O campo de senha não pode estar vazio!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            return true;
-        }
-
-        private bool Login()
+        private async Task<bool> Login()
         {
             string username = txtUser.Text;
             string password = txtPassword.Password;
@@ -119,8 +81,55 @@ namespace NeuroApp
             if (!AreCredentialsValid(username, password))
                 return false;
 
-            return ProcessLogin(username, password);
+            User? user = await AuthenticateUser(username, password);
+            if (user == null)
+            {
+                MessageBox.Show("Credenciais incorretas!", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            ProcessLogin(user);
+            return true;
         }
 
+        private async Task<User?> AuthenticateUser(string username, string password)
+        {
+            DatabaseActions databaseActions = new();
+            var (loginSuccess, userRole) = await databaseActions.UserLoginAsync(username, password);
+
+            if (!loginSuccess) return null;
+
+            User.UserFunction function = userRole switch
+            {
+                "high" => User.UserFunction.high,
+                "mid" => User.UserFunction.mid,
+                "low" => User.UserFunction.low,
+                _ => User.UserFunction.generic
+            };
+
+            return new User(username, "password", function);
+        }
+
+        private void ProcessLogin(User user)
+        {
+            PermissionSystem.Instance.SetCurrentUser(user);
+        }
+
+        private bool AreCredentialsValid(string username, string password)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                MessageBox.Show("O campo de usuário não pode estar vazio!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                MessageBox.Show("O campo de senha não pode estar vazio!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
     }
 }

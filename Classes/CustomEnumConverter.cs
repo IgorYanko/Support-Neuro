@@ -10,8 +10,8 @@ namespace NeuroApp.Classes
 {
     public class CustomEnumConverter<T> : JsonConverter<T> where T : struct, Enum
     {
-        private readonly Dictionary<string, T> _nameToValue = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<T, string> _valueToName = new Dictionary<T, string>();
+        private readonly Dictionary<string, T> _nameToValue = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<T, string> _valueToName = [];
 
         public CustomEnumConverter()
         {
@@ -38,8 +38,6 @@ namespace NeuroApp.Classes
                 return enumValue;
 
             return Enum.TryParse("Unknown", true, out T defaultValue) ? defaultValue : throw new JsonException($"Unable to map '{value}' to enum {typeof(T).Name}.");
-            
-            throw new JsonException($"Unable to map '{value}' to enum {typeof(T).Name}.");
         }
 
         public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)

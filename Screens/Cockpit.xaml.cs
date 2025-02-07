@@ -1,11 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using System.Data;
-using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Extensions.Configuration;
@@ -21,7 +23,7 @@ namespace NeuroApp
         private ObservableCollection<Sales> _cachedSalesData;
 
         private DataGridRow _draggedRow;
-        private System.Windows.Point _startPoint;
+        private Point _startPoint;
         private bool _isScrolling = false;
 
         private Sales _sales;
@@ -37,33 +39,31 @@ namespace NeuroApp
         {
             try
             {
-                if (_cachedSalesData == null)
+                var apiSales = await FetchSalesDataAsync();
+
+                foreach (var apiSale in apiSales)
                 {
-                    _cachedSalesData = await FetchSalesDataAsync();
-                }
+                    var cachedSale = _cachedSalesData?.FirstOrDefault(s => s.Code == apiSale.Code);
 
-                var salesData = _cachedSalesData;
-
-                foreach (var sales in salesData)
-                {
-                    DatabaseActions database = new();
-                    var existingSales = await database.GetSalesFromDatabaseAsync();
-
-                    var existingSale = existingSales.FirstOrDefault(es => es.code == sales.code);
-
-                    if (existingSale != null)
+                    if (cachedSale != null)
                     {
-                        if (existingSale.ApprovedAt == null && sales.approved)
+                        if (cachedSale.IsStatusModified && Sales.IsLocalStatus(cachedSale.Status.ToString()))
                         {
-                            sales.ApprovedAt = DateTime.UtcNow;
+                            continue;
+                        }
+
+                        if (!Sales.IsLocalStatus(apiSale.Status.ToString()))
+                        {
+                            cachedSale.Status = apiSale.Status;
+                            cachedSale.IsStatusModified = false;
                         }
                     }
-                    await database.VerifyAndSave(sales);
-
-                    foreach (var tag in sales.Tags)
+                    else
                     {
-                        await database.SaveTagForOSAsync(sales.code, tag.TagId);
-                        await database.LinkTagToSaleAsync(sales.code, tag.Id);
+                        DatabaseActions database = new();
+                        await database.VerifyAndSave(apiSale);
+
+                        _cachedSalesData?.Add(apiSale);
                     }
                 }
 
@@ -75,8 +75,38 @@ namespace NeuroApp
             }
         }
 
-        public async Task<ObservableCollection<Sales>> FetchSalesDataAsync()
+        public async Task<Sales> FetchSpecificSaleAsync(string saleCode)
         {
+            var endpoint = $"sales/{saleCode}";
+
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json").Build();
+
+                var apiService = new SensioApiService(configuration);
+
+                var response = await apiService.GetDataAsync(endpoint);
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+                };
+
+                var sale = JsonSerializer.Deserialize<Sales>(response, options);
+                return sale;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao buscar pedido {saleCode}: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<ObservableCollection<Sales>> FetchSalesDataAsync()
+       {
             try
             {
                 var configuration = new ConfigurationBuilder()
@@ -117,7 +147,7 @@ namespace NeuroApp
 
         private void InitializeTimer()
         {
-            _apiTimer = new TimerService(ProcessSalesDataAsync, TimeSpan.FromMinutes(5));
+            _apiTimer = new TimerService(ProcessSalesDataAsync, TimeSpan.FromMinutes(5), Application.Current.Dispatcher);
             _apiTimer.OnError += (s, ex) =>
             {
                 MessageBox.Show($"Erro no timer: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -126,8 +156,9 @@ namespace NeuroApp
 
         private async void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            _apiTimer.Start();
             await LoadSalesDataFromDatabaseAsync();
+
+            _apiTimer.Start();
         }
 
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
@@ -200,29 +231,32 @@ namespace NeuroApp
 
                 if (selectedRow != null)
                 {
-                    var numeroOs = selectedRow.code;
+                    var numeroOs = selectedRow.Code;
 
                     DatabaseActions databaseActions = new();
-                    databaseActions.AddObservations(cellText, numeroOs);
+                    databaseActions.AddObservationsAsync(cellText, numeroOs);
 
                     selectedRow.Observation = cellText;
                 }
             }
         }
 
-        //private void InitializeDataGrid()
-        //{
-        //    DataGridSales.AllowDrop = true;
-        //    DataGridSales.SelectionUnit = DataGridSelectionUnit.FullRow;
-        //    DataGridSales.SelectionMode = DataGridSelectionMode.Single;
-
-        //    DataGridSales.MouseMove += DataGridSales_MouseMove;
-        //    DataGridSales.PreviewMouseLeftButtonDown += DataGridSales_PreviewMouseLeftButtonDown;
-        //    DataGridSales.Drop += DataGridSales_Drop;
-        //}
-
         private void DataGridSales_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.OriginalSource is DependencyObject source)
+            {
+                while (source != null)
+                {
+                    if (source is ScrollBar)
+                    {
+                        _isScrolling = true;
+                        _draggedRow = null;
+                        return;
+                    }
+                    source = VisualTreeHelper.GetParent(source);
+                }
+            }
+
             _startPoint = e.GetPosition(null);
 
             var position = e.GetPosition(DataGridSales);
@@ -230,6 +264,7 @@ namespace NeuroApp
             if (row != null)
             {
                 _draggedRow = row;
+                _isScrolling = false;
             }
         }
 
@@ -268,9 +303,10 @@ namespace NeuroApp
                             for (int i = 0; i < SalesData.Count; i++)
                             {
                                 SalesData[i].Priority = i;
-                                SalesData[i].IsManual = true;
 
-                                databaseActions.UpdatePriority(SalesData[i].code, i);
+                                bool isManualValue = SalesData[i].IsManual || (SalesData[i] == draggedItem);
+
+                                databaseActions.UpdatePriorityAsync(SalesData[i].Code, i, isManualValue);
                             }
 
                             ApplyPrioritySorting();
@@ -284,12 +320,22 @@ namespace NeuroApp
         {
             var element = DataGridSales.InputHitTest(position) as DependencyObject;
 
-            while (element != null && !(element is DataGridRow))
+            while (element != null)
             {
+                if (element is ScrollBar)
+                {
+                    return null;
+                }
+
+                if (element is DataGridRow row)
+                {
+                    return row;
+                }
+
                 element = VisualTreeHelper.GetParent(element);
             }
 
-            return element as DataGridRow;
+            return null;
         }
 
         private void DataGridSales_DragOver(object sender, DragEventArgs e)
@@ -300,7 +346,7 @@ namespace NeuroApp
             }
             else
             {
-                e.Effects |= DragDropEffects.None;
+                e.Effects = DragDropEffects.None;
             }
 
             e.Handled = true;
@@ -319,7 +365,7 @@ namespace NeuroApp
         {
             if (_sales != null)
             {
-                var result = MessageBox.Show($"Deseja remover a OS nº {_sales.code}?",
+                var result = MessageBox.Show($"Deseja remover a OS nº {_sales.Code}?",
                                               "Confirmação",
                                               MessageBoxButton.YesNo,
                                               MessageBoxImage.Question);
@@ -327,7 +373,7 @@ namespace NeuroApp
                 if (result == MessageBoxResult.Yes)
                 {
                     DatabaseActions databaseActions = new();
-                    databaseActions.RemoveOs(_sales.code);
+                    databaseActions.RemoveOs(_sales.Code);
 
                     SalesData.Remove(_sales);
                     MessageBox.Show("OS removida com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -335,22 +381,38 @@ namespace NeuroApp
             }
         }
 
-        private void PauseOs_Click()
+        private async void PauseOs_Click(object sender, RoutedEventArgs e)
         {
-            if (_sales != null)
+            DatabaseActions databaseActions = new();
+
+            if (_sales != null && !_sales.IsPaused)
             {
-                var result = MessageBox.Show($"Deseja pausar a OS nº {_sales.code}?",
+                var result = MessageBox.Show($"Deseja pausar a OS nº {_sales.Code}?",
                                               "Confirmação",
                                               MessageBoxButton.YesNo,
                                               MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    DatabaseActions databaseActions = new();
-                    databaseActions.PauseOs(_sales.code);
+                    bool sucess = await databaseActions.PauseOsAsync(_sales.Code);
 
-                    MessageBox.Show("OS pausada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                    if (sucess)
+                    {
+                        _sales.IsPaused = true;
+                        SalesData.First(s => s.Code == _sales.Code).IsPaused = true;
+                        await LoadSalesDataFromDatabaseAsync();
+                    }
                 }
+            }
+            else
+            {
+                bool sucess = await databaseActions.UnpauseOsAsync(_sales.Code);
+
+                if (sucess)
+                {
+                    await LoadSalesDataFromDatabaseAsync();
+                }
+                //MessageBox.Show("Esta OS já pausada.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -398,34 +460,37 @@ namespace NeuroApp
             _draggedRow = null;
         }
 
-        private void PaintRowByPriority()
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var sales = _cachedSalesData;
-            TimeSpan interval = new(7,)
-
-            foreach (var sale in sales)
+            if (sender is ComboBox comboBox && comboBox.SelectedItem is string selectedStatus)
             {
-                DateTime? finalDate = sale.ApprovedAt + TimeSpan;
+                if (DataGridSales.SelectedItem is Sales selectedSale)
+                {
+                    if (Sales.IsLocalStatus(selectedStatus))
+                    {
+                        selectedSale.IsStatusModified = true;
+                        Status? enumStatus = GetStatusToComboBox.ConvertDisplayToEnum<Status>(selectedStatus);
+
+                        DatabaseActions databaseActions = new();
+                        databaseActions.UpdateStatusOnDatabaseAsync(selectedSale.Code, enumStatus.ToString());
+
+                        Console.WriteLine($"Status atualizado para {selectedStatus} na OS {selectedSale.Code}");
+                    }
+                }
             }
         }
     }
+}
 
-    public class RowColors
+public static class DependencyObjectExtensions
+{
+    public static T GetParentOfType<T>(this DependencyObject child) where T : DependencyObject
     {
-        public System.Drawing.Color backgroundColor {  get; set; }
-        public System.Drawing.Color foregroundColor { get; set; }
-    }
+        var parentObject = VisualTreeHelper.GetParent(child);
+        if (parentObject == null) return null;
 
-    public static class DependencyObjectExtensions
-    {
-        public static T GetParentOfType<T>(this DependencyObject child) where T : DependencyObject
-        {
-            var parentObject = VisualTreeHelper.GetParent(child);
-            if (parentObject == null) return null;
+        if (parentObject is T parent) return parent;
 
-            if (parentObject is T parent) return parent;
-
-            return GetParentOfType<T>(parentObject);
-        }
+        return GetParentOfType<T>(parentObject);
     }
 }

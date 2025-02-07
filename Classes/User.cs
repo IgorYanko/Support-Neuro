@@ -1,22 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NeuroApp
 {
+
     public class User
     {
-        public enum Function
+        public enum UserFunction
         {
-            adm = 3,
-            eng = 2,
-            sup = 1
+            high = 3,
+            mid = 2,
+            low = 1,
+            generic = 0
         }
 
-        public string UserName { get; set; }
-        public string Password { get; set; }
-        public Function function { get; set; }
+        public string UserName { get; }
+        public UserFunction Function { get; }
+
+        public User(string username, string password, UserFunction function)
+        { 
+            UserName = username;
+            Function = function;
+        }
     }
 }

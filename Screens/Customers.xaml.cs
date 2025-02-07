@@ -38,9 +38,10 @@ namespace NeuroApp.Screens
                 var response = await apiService.GetDataAsync(endpoint);
                 var apiResponse = JsonSerializer.Deserialize<ApiResponse>(response, options);
                 
-                _clientes = apiResponse.Response
-                                        .Where(p => p.Type != null && p.Type.Contains("Cliente"))
-                                        .ToList();    
+                //_clientes = apiResponse.Response
+                //                        .Where(p => p.Type != null && p.Type.Contains("Cliente"))
+                //                        .ToList();
+                
                 ClientesListView.ItemsSource = _clientes;
 
                 _tipos = Enum.GetValues(typeof(PersonType)).Cast<PersonType>().ToList();
@@ -74,8 +75,8 @@ namespace NeuroApp.Screens
             if (_clientes == null || _clientes.Count == 0) return;
 
             var filteredClients = _clientes
-                .Where(c => c.name != null &&
-                            c.name.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0)
+                .Where(c => c.Name != null &&
+                            c.Name.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0)
                 .ToList();
 
             ClientesListView.ItemsSource = filteredClients;

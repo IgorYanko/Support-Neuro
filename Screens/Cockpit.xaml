@@ -4,19 +4,24 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:NeuroApp.Controls"
+             xmlns:classes="clr-namespace:NeuroApp.Classes"
              xmlns:sys="clr-namespace:NeuroApp.Screens"
              mc:Ignorable="d"
              d:DesignHeight="750" d:DesignWidth="450">
+
+    <UserControl.Resources>
+        <classes:RemainingTimeToBrushConverter x:Key="TimeToBrushConverter"/>
+        <classes:PauseButtonTextChanger x:Key="PauseButtonTextChanger"/>
+    </UserControl.Resources>
 
     <Grid Background="#F9F9F9">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        
-        <local:Backbar Grid.Row="0" Height="50" GoBackCommand="{Binding GoBackCommand}"/>
 
-        <DataGrid   x:Name="DataGridSales" 
+        <local:Backbar Grid.Row="0" Height="50" GoBackCommand="{Binding GoBackCommand}"/>
+            <DataGrid   x:Name="DataGridSales" 
                     AutoGenerateColumns="False"
                     Grid.Row="1"
                     ItemsSource="{Binding SalesData}" 
@@ -40,7 +45,10 @@
                     MouseMove="DataGridSales_MouseMove"
                     Drop="DataGridSales_Drop"
                     MouseRightButtonDown="DataGridSales_MouseRightButtonDown"
-                    PreviewMouseLeftButtonUp="DataGridSales_PreviewMouseLeftButtonUp">
+                    PreviewMouseLeftButtonUp="DataGridSales_PreviewMouseLeftButtonUp"
+                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto"
+                    SelectedItem="{Binding SelectedSale}">
 
                 <DataGrid.Resources>
                     <Style TargetType="DataGridColumnHeader">
@@ -50,11 +58,24 @@
                         <Setter Property="Foreground" Value="Black"/>
                         <Setter Property="HorizontalContentAlignment" Value="Center"/>
                     </Style>
+
+                    <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                    <Setter Property="Background" Value="{Binding ., Converter={StaticResource TimeToBrushConverter}, ConverterParameter=Background}"/>
+                    <Setter Property="Foreground" Value="{Binding ., Converter={StaticResource TimeToBrushConverter}, ConverterParameter=Foreground}"/>
+                    </Style>
                 </DataGrid.Resources>
+
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="{Binding ., Converter={StaticResource TimeToBrushConverter}}"/>
+                        <Setter Property="Foreground" Value="{Binding ., Converter={StaticResource TimeToBrushConverter}, ConverterParameter=Foreground}"/>
+                        <Setter Property="Height" Value="55"/>
+                    </Style>
+                </DataGrid.RowStyle>
 
                 <DataGrid.Columns>
 
-                    <DataGridTextColumn Header="Nº OS" Width="Auto" Binding="{Binding code}" IsReadOnly="True">
+                    <DataGridTextColumn Header="Nº OS" Width="Auto" Binding="{Binding Code}" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -63,7 +84,7 @@
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Cliente" Width="Auto" Binding="{Binding personName}" IsReadOnly="True">
+                    <DataGridTextColumn Header="Cliente" Width="Auto" Binding="{Binding PersonName}" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -81,23 +102,35 @@
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Tipo" Width="Auto" Binding="{Binding displayType}" IsReadOnly="True">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                <DataGridTextColumn Header="Tipo" Width="Auto" Binding="{Binding DisplayType}" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Status" Width="Auto" Binding="{Binding displayStatus}" IsReadOnly="True">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                <DataGridTemplateColumn Header="Status" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayStatus}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <ComboBox ItemsSource="{Binding StatusList}"
+                                          SelectedItem="{Binding DisplayStatus, Mode=TwoWay}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Width="120"
+                                          SelectionChanged="ComboBox_SelectionChanged"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="Tag" Width="Auto">
                         <DataGridTemplateColumn.CellTemplate>
@@ -116,7 +149,7 @@
                                                             FontWeight="SemiBold"/>
                                                 </Border>
                                             </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
+                                        </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                 </StackPanel>
                             </DataTemplate>
@@ -136,20 +169,13 @@
 
                 <DataGrid.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="Remover OS" Click="RemoveOs_Click" />
+                        <MenuItem Header="Remover OS" Click="RemoveOs_Click"/>
+                        <MenuItem Header="{Binding PlacementTarget.SelectedItem.IsPaused,
+                                                   RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}, 
+                                                   Converter={StaticResource PauseButtonTextChanger}}" 
+                                  Click="PauseOs_Click" />
                     </ContextMenu>
                 </DataGrid.ContextMenu>
-
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow">
-                        <Setter Property="Height" Value="65"/>
-                        <!--<Setter Property="Background" Value="{Binding}"/>-->
-                        <!--<Setter Property=""/>-->
-                        <!--<Setter Property=""/>-->
-                        <!--<Setter Property=""/>-->
-                    </Style>
-                </DataGrid.RowStyle>
             </DataGrid>
     </Grid>
-
 </UserControl>

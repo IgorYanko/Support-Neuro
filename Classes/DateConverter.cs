@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -10,24 +11,28 @@ namespace NeuroApp.Classes
 {
     public class DateConverter : JsonConverter<DateTime>
     {
+        private const string DateFormat = "yyyy-MM-dd";
+
         public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
+            if (reader.TokenType == JsonTokenType.Null)
+                return default;
+
             var value = reader.GetString();
-            if(!string.IsNullOrEmpty(value) && value.Length >= 10)
+            if (!string.IsNullOrEmpty(value))
             {
-                var datePart = value.Substring(0, 10);
-                if (DateTime.TryParse(datePart, out DateTime parsedDate))
+                if (DateTime.TryParseExact(value.Substring(0, 10), DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate))
                 {
-                    return parsedDate.Date;
+                    return parsedDate;
                 }
             }
-            
+
             throw new JsonException($"Invalid date format: {value}");
         }
 
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(value.ToString("dd-MM-yyyy"));
+            writer.WriteStringValue(value.ToString(DateFormat, CultureInfo.InvariantCulture));
         }
     }
 }

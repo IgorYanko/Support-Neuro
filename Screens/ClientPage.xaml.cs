@@ -43,33 +43,33 @@ namespace NeuroApp.Screens
 
         private void LoadClientInfo(Person client)
         {
-            Name = client.name ?? "----";
-            Nature = client.Nature ?? "----";
+            Name = client.Name ?? "----";
+            Nature = client.Nature.ToString() ?? "----";
             CpfOrCnpj = client.CpfOrCnpj ?? "----";
             Type = client.Type.ToString() ?? "----";
             IcmsCont = client.IcmsCont.ToString() ?? "----";
-            Phone = client.phone ?? "----";
-            Cellphone = client.cellphone ?? "----";
-            MainContact = client.mainContact ?? "----";
-            Email = client.email ?? "----";
+            Phone = client.Phone ?? "----";
+            Cellphone = client.Cellphone ?? "----";
+            MainContact = client.MainContact ?? "----";
+            Email = client.Email ?? "----";
 
-            if (client.address != null)
-                Address = $"{client.address.street}, {client.address.number}";
+            if (client.Address != null)
+                Address = $"{client.Address.Street}, {client.Address.Number}";
             else
                 Address = "----";
             
-            Cep = !string.IsNullOrEmpty(client.address.cep) && long.TryParse(client.address.cep, out var cep) 
+            Cep = !string.IsNullOrEmpty(client.Address.Cep) && long.TryParse(client.Address.Cep, out var cep) 
                 ? string.Format("{0:#####-###}", cep)
                 : "----";
 
-            Neighborhood = client.address.neighborhood ?? "----";
+            Neighborhood = client.Address.Neighborhood ?? "----";
             
-            if (client.address.city != null && client.address.uf != null)
-                CityUf = $"{client.address.city}/{client.address.uf}";
+            if (client.Address.City != null && client.Address.Uf != null)
+                CityUf = $"{client.Address.City}/{client.Address.Uf}";
             else
                 CityUf = "----";
 
-            Country = client.address.country ?? "----";
+            Country = client.Address.Country ?? "----";
         }
     }
 }
