@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NeuroApp"
         mc:Ignorable="d"
-        Title="Neurograff App" MinHeight="400" MinWidth="700">
+        Title="SCN" MinHeight="400" MinWidth="700">
 
     <ContentControl Content="{Binding CurrentView}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10" SizeChanged="ContentControl_SizeChanged"/>
 </Controls:MetroWindow>

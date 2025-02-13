@@ -109,5 +109,17 @@ namespace NeuroApp.Classes
 
             return currentDate;
         }
+
+        public static DateTime CalculateDeadline(DateTime startDate)
+        {
+            int businessDaysToAdd = 10;
+            return AddBusinessDays(startDate, businessDaysToAdd);
+        }
+
+        public static DateTime CalculateExpirationDate(DateTime startDate)
+        {
+            int businessDaysToAdd = 20;
+            return AddBusinessDays(startDate,businessDaysToAdd);
+        }
     }
 }

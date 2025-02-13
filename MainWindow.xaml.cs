@@ -11,13 +11,14 @@ namespace NeuroApp
         public MainWindow()
         {
             InitializeComponent();
-            MainViewModel mainViewModel = new();
-            DataContext = mainViewModel;
+            
+            DataContext = MainViewModel.Instance;
             _buttons = (ResponsiveBigButtons)Application.Current.Resources["ResponsiveBigButtons"] as ResponsiveBigButtons ?? new ResponsiveBigButtons();
             SizeChanged += ContentControl_SizeChanged;
 
-            HomeScreen homeScreen = new(mainViewModel);
-            mainViewModel.CurrentView = homeScreen;
+            //HomeScreen homeScreen = new(MainViewModel.Instance);
+            Cockpit cockpit = new(MainViewModel.Instance);
+            MainViewModel.Instance.CurrentView = cockpit;
         }
 
         private void ContentControl_SizeChanged(object sender, SizeChangedEventArgs e)

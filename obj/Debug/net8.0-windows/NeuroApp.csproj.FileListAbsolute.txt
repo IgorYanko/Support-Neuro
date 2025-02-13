@@ -66,7 +66,6 @@ C:\Users\Suporte Neurograff\Source\Repos\IgorYanko\Support-Neuro\obj\Debug\net8.
 C:\Users\Suporte Neurograff\Source\Repos\IgorYanko\Support-Neuro\obj\Debug\net8.0-windows\Screens\ClientPage.g.cs
 C:\Users\Suporte Neurograff\Source\Repos\IgorYanko\Support-Neuro\obj\Debug\net8.0-windows\Screens\ClientPage.baml
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\NeuroApp.csproj.AssemblyReference.cache
-C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\Controls\Backbar.g.cs
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\LoginScreen.g.cs
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\MainWindow.g.cs
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\Screens\ClientPage.g.cs
@@ -120,7 +119,6 @@ C:\Users\supor\Source\Repos\Support-Neuro\bin\Debug\net8.0-windows\Microsoft.Web
 C:\Users\supor\Source\Repos\Support-Neuro\bin\Debug\net8.0-windows\Microsoft.Web.WebView2.Wpf.xml
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\Screens\Cockpit.g.cs
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\App.baml
-C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\Controls\Backbar.baml
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\LoginScreen.baml
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\MainWindow.baml
 C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\Screens\ClientPage.baml

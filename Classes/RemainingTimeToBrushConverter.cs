@@ -34,23 +34,34 @@ namespace NeuroApp.Classes
             }
 
             int remainingDays = sale.RemainingBusinessDays ?? int.MaxValue;
+            string status = sale.Status.ToString();
+            string normalizedStatus = status.Replace(" ", "");
 
-            if (remainingDays == NOT_APPROVED_FLAG)
+            if (status == "Aprovado" || Sales.IsLocalStatus(normalizedStatus))
             {
-                return parameter?.ToString() == "Foreground" ? DefaultForeground : DefaultBackground;
-            }
+                Console.WriteLine($"{status} e {normalizedStatus}");
+                if (remainingDays == NOT_APPROVED_FLAG)
+                {
+                    return parameter?.ToString() == "Foreground" ? DefaultForeground : DefaultBackground;
+                }
 
-            if (remainingDays >= 4)
-            {
-                return parameter?.ToString() == "Foreground" ? DefaultForeground : SafeBackground;
-            }
-            else if (remainingDays >= 0)
-            {
-                return parameter?.ToString() == "Foreground" ? DefaultForeground : WarningBackground;
+                if (remainingDays >= 4)
+                {
+                    return parameter?.ToString() == "Foreground" ? DefaultForeground : SafeBackground;
+                }
+                else if (remainingDays > 1)
+                {
+                    return parameter?.ToString() == "Foreground" ? DefaultForeground : WarningBackground;
+                }
+                else
+                {
+                    return parameter?.ToString() == "Foreground" ? DangerForeground : DangerBackground;
+                }
             }
             else
             {
-                return parameter?.ToString() == "Foreground" ? DangerForeground : DangerBackground;
+                Console.WriteLine($"{status} e {normalizedStatus}");
+                return parameter?.ToString() == "Foreground" ? DefaultForeground : DefaultBackground;
             }
         }
 

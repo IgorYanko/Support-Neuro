@@ -7,9 +7,6 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Controls\Backbar.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Update="Screens\ClientPage.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -25,17 +22,8 @@
     <Compile Update="Screens\Customers.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Screens\Finances.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Screens\ServiceOrders.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Controls\Backbar.xaml">
-      <SubType>Designer</SubType>
-    </Page>
     <Page Update="Screens\ClientPage.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -52,12 +40,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Screens\Customers.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Screens\Finances.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Screens\ServiceOrders.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

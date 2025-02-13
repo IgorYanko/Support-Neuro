@@ -137,19 +137,11 @@ namespace NeuroApp.Classes
 
                     var (currentStatus, currentApprovedAt, currentPriority) = await GetCurrentStatusAsync(connection, sale.Code);
 
-                    DateTime? approvedAt = null;
-                    bool isNewApproval = sale.Status == Status.Aprovado && currentStatus != "Aprovado";
+                    DateTime? approvedAt = currentApprovedAt ?? (sale.Status == Status.Aprovado ? DateTime.UtcNow : null);
 
-                    if (isNewApproval)
-                    {
-                        approvedAt = DateTime.UtcNow;
-                    }
-
-                    DateTime? deadline =  null;
-                    if (isNewApproval && approvedAt.HasValue)
-                    {
-                        deadline = BusinessDayCalculator.AddBusinessDays(approvedAt.Value, 7);
-                    }
+                    DateTime? deadline = sale.Status == Status.Aprovado
+                        ? BusinessDayCalculator.CalculateDeadline(approvedAt.Value)
+                        : null;
 
                     int priority = CalculatePriority(sale.Status.ToString());
 
@@ -157,7 +149,7 @@ namespace NeuroApp.Classes
 
                     foreach (var tag in sale.Tags)
                     {
-                        await SaveTagForOSAsync(sale.Code, tag.Id);
+                        await SaveTagForOSAsync(sale.Code, tag.TagId);
                     }
                 }
             }
@@ -165,6 +157,28 @@ namespace NeuroApp.Classes
             {
                 Console.WriteLine($"Erro: {ex.Message}");
                 throw;
+            }
+        }
+
+        public async Task<bool> CheckIfOsExistsAsync(string osCode)
+        {
+            try
+            {
+                using var connection = new NpgsqlConnection(ConnectionString);
+                await connection.OpenAsync();
+
+                var query = "SELECT COUNT(*) FROM serviceorders WHERE numos = @osCode";
+
+                using var command = new NpgsqlCommand(query, connection);
+                command.Parameters.AddWithValue("@osCode", osCode);
+
+                int count = Convert.ToInt32(await command.ExecuteScalarAsync());
+                return count > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao verificar existência da OS {osCode}: {ex.Message}");
+                return false;
             }
         }
 
@@ -253,7 +267,7 @@ namespace NeuroApp.Classes
                                 ELSE
                                     CASE status
                                         WHEN 'Emexecução' THEN 0
-                                        WHEN 'Controledequalidade' THEN 0
+                                        WHEN 'ControledeQualidade' THEN 0
                                         WHEN 'ReprovadoQualidade' THEN 0
                                         WHEN 'AprovadoQualidade' THEN 0
                                         WHEN 'EsperandoColeta' THEN 0
@@ -276,7 +290,7 @@ namespace NeuroApp.Classes
 
                 using var command = new NpgsqlCommand(query, connection);
                 using var reader = await command.ExecuteReaderAsync();
-                
+
                 while (await reader.ReadAsync())
                 {
                     var sale = MapToSale(reader);
@@ -417,8 +431,14 @@ namespace NeuroApp.Classes
                 DisplayStatus = MapToSaleStatus(GetValueOrDefault(reader["status"], "Unknown")),
                 IsPaused = reader["pausedDate"] != DBNull.Value,
                 IsManual = GetNulableBool(reader["ismanual"]) ?? false,
-                Priority = CalculatePriority(GetValueOrDefault(reader["status"], "Unknown"))
+                Priority = CalculatePriority(GetValueOrDefault(reader["status"], "Unknown")),
+                ApprovedAt = GetNullableDateTime(reader["approvedat"])
             };
+
+            if (sale.DisplayStatus == "Aprovado" && sale.ApprovedAt.HasValue)
+            {
+                sale.Deadline = BusinessDayCalculator.CalculateDeadline(sale.ApprovedAt.Value);
+            }
 
             if (reader["tagid"] != DBNull.Value && !string.IsNullOrEmpty(reader["tagid"].ToString()))
             {
@@ -469,6 +489,37 @@ namespace NeuroApp.Classes
             }
         }
 
+        public async Task<List<Tag>> GetTagsForOsAsync(string osCode)
+        {
+            var tags = new List<Tag>();
+
+            try
+            {
+                using var connection = new NpgsqlConnection(ConnectionString);
+                await connection.OpenAsync();
+
+                string query = "SELECT tagid FROM salestags WHERE oscode = @OsCode";
+
+                using var command = new NpgsqlCommand(query, connection);
+                command.Parameters.AddWithValue("@OsCode", osCode);
+
+                using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    tags.Add(new Tag
+                    {
+                        TagId = reader["tagid"].ToString()
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao buscar tags da OS {osCode}: {ex.Message}");
+            }
+
+            return tags;
+        }
+
         public async Task RemoveOs(string osCode)
         {
             try
@@ -493,7 +544,7 @@ namespace NeuroApp.Classes
             }
         }
 
-        public async Task<bool> PauseOsAsync(string osCode)
+        public async Task<bool> PauseOsAsync(string osCode)/*, Status status)*/
         {
             try
             {
@@ -514,16 +565,19 @@ namespace NeuroApp.Classes
 
                 var result = await command.ExecuteScalarAsync();
 
-                if (result != null)
-                {
-                    MessageBox.Show($"OS {osCode} pausada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return true;
-                }
-                else
-                {
-                    MessageBox.Show($"A OS {osCode} não pode ser pausada. Verifique se já está aprovada.", "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return false;
-                }
+                //if (status == Status.Aprovado)
+                //{
+                    if (result != null)
+                    {
+                        MessageBox.Show($"OS {osCode} pausada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return true;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"A OS {osCode} não pode ser pausada. Verifique se já está aprovada.", "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return false;
+                    }
+                //}
             }
             catch (Exception ex)
             {

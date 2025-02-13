@@ -71,8 +71,6 @@ namespace NeuroApp.Classes
 
         Emexecução,
 
-        Pausada,
-
         ControledeQualidade,
 
         AprovadoQualidade,
@@ -95,6 +93,7 @@ namespace NeuroApp.Classes
     public class Sales
     {
         private const int BUSINESS_DAYS_LIMIT = 10;
+        private const int WAITING_DAYS_LIMIT = 20;
         private const int NOT_APPROVED_FLAG = -999;
 
         [JsonPropertyName("_id")]
@@ -139,27 +138,52 @@ namespace NeuroApp.Classes
             }
         }
 
+        public bool IsStatusEditable => new HashSet<string>
+        {
+            "Aprovado",
+            "Em Execução",
+            "Controle de Qualidade",
+            "Aprovado na Qualidade",
+            "Reprovado na Qualidade",
+            "Esperando Coleta"
+        }.Contains(Status.ToString());
+
         public static bool IsLocalStatus(string status)
         {
             var localStatuses = new HashSet<string>
             {
                 "Em Execução",
-                "Pausada",
                 "Controle de Qualidade",
-                "Aprovadona Qualidade",
-                "Reprovadona Qualidade",
+                "Aprovado na Qualidade",
+                "Reprovado na Qualidade",
                 "Esperando Coleta"
             };
 
             return localStatuses.Contains(status);
         }
 
-        public List<string> StatusList { get; } = GetStatusToComboBox.GetStatusToComboBoxList<Status>().GetRange(7, 6);
+        public List<string> StatusList { get; } = GetStatusToComboBox.GetStatusToComboBoxList<Status>().GetRange(7, 4);
 
         [JsonPropertyName("tags")]
         public List<Tag> Tags { get; set; } = new();
 
-        public List<CustomTag> MappedTags { get; set; } = new();
+        private List<CustomTag> _mappedTags;
+        public List<CustomTag> MappedTags
+        {
+            get
+            {
+                if (_mappedTags == null)
+                {
+                    var tagMapper = new Tags();
+                    _mappedTags = Tags
+                        .Select(tag => tagMapper.GetCustomTagById(tag.TagId))
+                        .Where(mappedTags => mappedTags != null)
+                        .ToList();
+                }
+
+                return _mappedTags;
+            }
+        }
 
         [JsonPropertyName("approved")]
         public bool Approved { get; set; }
@@ -170,20 +194,23 @@ namespace NeuroApp.Classes
 
         public int Priority { get; set; }
 
-        public DateTime? ApprovedAt { get; set; }
-
-        public DateTime? Deadline
-        {
-            get
-            {
-                if (!ApprovedAt.HasValue) return null;
-                return BusinessDayCalculator.AddBusinessDays(ApprovedAt.Value, 7);
-            }
-        }
-
         public bool IsPaused { get; set; }
 
         public bool IsStatusModified { get; set; } = false;
+
+        public DateTime? ApprovedAt { get; set; }
+
+        public DateTime? Deadline { get; set; }
+
+        public DateTime? ExpirationDate
+        {
+            get
+            {
+                if (ApprovedAt.HasValue || Status == Status.Aprovado) return null;
+
+                return BusinessDayCalculator.CalculateExpirationDate(DateCreated);
+            }
+        }
 
         public int? RemainingBusinessDays
         {

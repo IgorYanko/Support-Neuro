@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:NeuroApp.Controls"
              xmlns:classes="clr-namespace:NeuroApp.Classes"
              xmlns:sys="clr-namespace:NeuroApp.Screens"
              mc:Ignorable="d"
@@ -16,12 +15,20 @@
 
     <Grid Background="#F9F9F9">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="50"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <local:Backbar Grid.Row="0" Height="50" GoBackCommand="{Binding GoBackCommand}"/>
-            <DataGrid   x:Name="DataGridSales" 
+        <StackPanel Grid.Row="0" Background="#F9F9F9" Height="50">
+            <TextBlock Text="Cockpit"
+                       FontSize="25"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"/>
+
+        </StackPanel>
+
+        <DataGrid x:Name="DataGridSales" 
                     AutoGenerateColumns="False"
                     Grid.Row="1"
                     ItemsSource="{Binding SalesData}" 
@@ -39,6 +46,7 @@
                     AlternatingRowBackground="{DynamicResource MaterialDesignPaper}"
                     AllowDrop="True"
                     DragOver="DataGridSales_DragOver"
+                    BeginningEdit="DataGridSales_BeginningEdit"
                     CellEditEnding="DataGridSales_CellEditEnding"
                     PreviewMouseLeftButtonDown="DataGridSales_PreviewMouseLeftButtonDown"
                     PreviewMouseMove="DataGridSales_PreviewMouseMove"
@@ -50,57 +58,57 @@
                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                     SelectedItem="{Binding SelectedSale}">
 
-                <DataGrid.Resources>
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="FontSize" Value="16"/>
-                        <Setter Property="FontFamily" Value="Arial"/>
-                        <Setter Property="FontWeight" Value="DemiBold"/>
-                        <Setter Property="Foreground" Value="Black"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                    </Style>
+            <DataGrid.Resources>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="FontSize" Value="16"/>
+                    <Setter Property="FontFamily" Value="Arial"/>
+                    <Setter Property="FontWeight" Value="DemiBold"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                </Style>
 
-                    <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
                     <Setter Property="Background" Value="{Binding ., Converter={StaticResource TimeToBrushConverter}, ConverterParameter=Background}"/>
                     <Setter Property="Foreground" Value="{Binding ., Converter={StaticResource TimeToBrushConverter}, ConverterParameter=Foreground}"/>
-                    </Style>
-                </DataGrid.Resources>
+                </Style>
+            </DataGrid.Resources>
 
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow">
-                        <Setter Property="Background" Value="{Binding ., Converter={StaticResource TimeToBrushConverter}}"/>
-                        <Setter Property="Foreground" Value="{Binding ., Converter={StaticResource TimeToBrushConverter}, ConverterParameter=Foreground}"/>
-                        <Setter Property="Height" Value="55"/>
-                    </Style>
-                </DataGrid.RowStyle>
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="Background" Value="{Binding ., Converter={StaticResource TimeToBrushConverter}}"/>
+                    <Setter Property="Foreground" Value="{Binding ., Converter={StaticResource TimeToBrushConverter}, ConverterParameter=Foreground}"/>
+                    <Setter Property="Height" Value="Auto"/>
+                </Style>
+            </DataGrid.RowStyle>
 
-                <DataGrid.Columns>
+            <DataGrid.Columns>
 
-                    <DataGridTextColumn Header="Nº OS" Width="Auto" Binding="{Binding Code}" IsReadOnly="True">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                <DataGridTextColumn Header="Nº OS" Width="Auto" Binding="{Binding Code}" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Cliente" Width="Auto" Binding="{Binding PersonName}" IsReadOnly="True">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                <DataGridTextColumn Header="Cliente" Width="Auto" Binding="{Binding PersonName}" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="Data de Chegada" Width="Auto" Binding="{Binding DateCreated, StringFormat=\{0:dd/MM/yyyy\}}" IsReadOnly="True">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                <DataGridTextColumn Header="Data de Chegada" Width="Auto" Binding="{Binding DateCreated, StringFormat=\{0:dd/MM/yyyy\}}" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
                 <DataGridTextColumn Header="Tipo" Width="Auto" Binding="{Binding DisplayType}" IsReadOnly="True">
                     <DataGridTextColumn.ElementStyle>
@@ -112,70 +120,73 @@
                 </DataGridTextColumn>
 
                 <DataGridTemplateColumn Header="Status" Width="Auto">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding DisplayStatus}"
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayStatus}"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
 
-                        <DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate>
-                                <ComboBox ItemsSource="{Binding StatusList}"
-                                          SelectedItem="{Binding DisplayStatus, Mode=TwoWay}"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          Width="120"
-                                          SelectionChanged="ComboBox_SelectionChanged"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellEditingTemplate>
-                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding StatusList}"
+                                      SelectedItem="{Binding DisplayStatus, Mode=TwoWay}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Width="Auto"
+                                      IsEnabled="{Binding IsStatusEditable}"
+                                      SelectionChanged="ComboBox_SelectionChanged"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Header="Tag" Width="Auto">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <ItemsControl ItemsSource="{Binding MappedTags}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Background="{Binding Color}"
-                                                        CornerRadius="5"
-                                                        Padding="5,2"
-                                                        Margin="2"
-                                                        VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Name}"
+                <DataGridTemplateColumn Header="Tag" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                <ItemsControl ItemsSource="{Binding MappedTags}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding Color}"
+                                                    CornerRadius="5"
+                                                    Padding="5,2"
+                                                    Margin="2"
+                                                    VerticalAlignment="Center">
+                                                
+                                                <TextBlock  Text="{Binding Name}"
                                                             Foreground="{Binding TextColor}"
                                                             FontWeight="SemiBold"/>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                                                
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="Observações" Width="350" IsReadOnly="False" Binding="{Binding Observation}">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                <DataGridTextColumn Header="Observações" Width="350" IsReadOnly="False" Binding="{Binding Observation}">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
-                </DataGrid.Columns>
+            </DataGrid.Columns>
 
-                <DataGrid.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Remover OS" Click="RemoveOs_Click"/>
-                        <MenuItem Header="{Binding PlacementTarget.SelectedItem.IsPaused,
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Remover OS" Click="RemoveOs_Click"/>
+                    <MenuItem Header="{Binding PlacementTarget.SelectedItem.IsPaused,
                                                    RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}, 
                                                    Converter={StaticResource PauseButtonTextChanger}}" 
                                   Click="PauseOs_Click" />
-                    </ContextMenu>
-                </DataGrid.ContextMenu>
-            </DataGrid>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+        </DataGrid>
     </Grid>
 </UserControl>

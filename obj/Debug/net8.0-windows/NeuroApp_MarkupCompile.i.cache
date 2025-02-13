@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 C:\Users\supor\Source\Repos\Support-Neuro\App.xaml
-9-505755708
+7-545277929
 3-720092851
-33-1849
+29102029422
 221-1984524683
-Controls\Backbar.xaml;LoginScreen.xaml;MainWindow.xaml;Screens\ClientPage.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\Finances.xaml;Screens\HomeScreen.xaml;Screens\ServiceOrders.xaml;
+LoginScreen.xaml;MainWindow.xaml;Screens\ClientPage.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\HomeScreen.xaml;Screens\ServiceOrders.xaml;
 
 True
 

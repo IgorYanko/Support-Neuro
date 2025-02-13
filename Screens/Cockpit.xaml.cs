@@ -20,7 +20,7 @@ namespace NeuroApp
     {
         public ObservableCollection<Sales> SalesData { get; set; } = new ObservableCollection<Sales>();
         private TimerService _apiTimer;
-        private ObservableCollection<Sales> _cachedSalesData;
+        private ObservableCollection<Sales> _cachedSalesData = new();
 
         private DataGridRow _draggedRow;
         private Point _startPoint;
@@ -28,11 +28,12 @@ namespace NeuroApp
 
         private Sales _sales;
 
-        public Cockpit()
+        public Cockpit(MainViewModel mainViewModel)
         {
             InitializeComponent();
             InitializeTimer();
-            DataContext = new MainViewModel();
+            DataContext = mainViewModel;
+            Console.WriteLine($"Cockpit inicializado. ViewModel: {mainViewModel}");
         }
 
         public async Task ProcessSalesDataAsync()
@@ -40,10 +41,13 @@ namespace NeuroApp
             try
             {
                 var apiSales = await FetchSalesDataAsync();
+                DatabaseActions database = new();
+
+                _cachedSalesData = new ObservableCollection<Sales>(apiSales);
 
                 foreach (var apiSale in apiSales)
                 {
-                    var cachedSale = _cachedSalesData?.FirstOrDefault(s => s.Code == apiSale.Code);
+                    var cachedSale = _cachedSalesData.FirstOrDefault(s => s.Code == apiSale.Code);
 
                     if (cachedSale != null)
                     {
@@ -52,7 +56,7 @@ namespace NeuroApp
                             continue;
                         }
 
-                        if (!Sales.IsLocalStatus(apiSale.Status.ToString()))
+                        if (!Sales.IsLocalStatus(apiSale.Status.ToString()) && cachedSale.Status.ToString() != apiSale.Status.ToString())
                         {
                             cachedSale.Status = apiSale.Status;
                             cachedSale.IsStatusModified = false;
@@ -60,9 +64,8 @@ namespace NeuroApp
                     }
                     else
                     {
-                        DatabaseActions database = new();
                         await database.VerifyAndSave(apiSale);
-
+                        apiSale.Tags = await database.GetTagsForOsAsync(apiSale.Code);
                         _cachedSalesData?.Add(apiSale);
                     }
                 }
@@ -75,38 +78,8 @@ namespace NeuroApp
             }
         }
 
-        public async Task<Sales> FetchSpecificSaleAsync(string saleCode)
-        {
-            var endpoint = $"sales/{saleCode}";
-
-            try
-            {
-                var configuration = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json").Build();
-
-                var apiService = new SensioApiService(configuration);
-
-                var response = await apiService.GetDataAsync(endpoint);
-
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-                };
-
-                var sale = JsonSerializer.Deserialize<Sales>(response, options);
-                return sale;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erro ao buscar pedido {saleCode}: {ex.Message}");
-                return null;
-            }
-        }
-
         public async Task<ObservableCollection<Sales>> FetchSalesDataAsync()
-       {
+        {
             try
             {
                 var configuration = new ConfigurationBuilder()
@@ -125,18 +98,16 @@ namespace NeuroApp
                 var response = await apiService.GetDataAsync(endpoint);
                 var apiResponse = JsonSerializer.Deserialize<ApiResponseSales>(response, options);
 
-                if (apiResponse == null || apiResponse.Response == null)
+                if (apiResponse?.Response == null)
                 {
                     throw new InvalidOperationException("API response is null or invalid.");
                 }
 
                 DateTime maxDate = DateTime.Today.AddDays(-30);
 
-                var filteredSales = apiResponse.Response
-                    .Where(sale => sale.DateCreated >= maxDate && sale.DateCreated <= DateTime.Today)
-                    .ToList();
-
-                return new ObservableCollection<Sales>(filteredSales ?? new List<Sales>());
+                return new ObservableCollection<Sales>(
+                    apiResponse.Response.Where(sale => sale.DateCreated >= maxDate && sale.DateCreated <= DateTime.Today)
+                );
             }
             catch (Exception ex)
             {
@@ -145,9 +116,46 @@ namespace NeuroApp
             }
         }
 
+        public async Task<Sales?> FetchSpecificSaleAsync(string saleCode)
+        {
+            var endpoint = $"sales/{Uri.EscapeDataString(saleCode)}";
+
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json").Build();
+
+                var apiService = new SensioApiService(configuration);
+
+                var response = await apiService.GetDataAsync(endpoint);
+
+                if (string.IsNullOrWhiteSpace(response))
+                {
+                    Console.WriteLine($"Erro: resposta vazia ao buscar pedido {saleCode}");
+                    return null;
+                }
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+                };
+
+                var sale = JsonSerializer.Deserialize<Sales>(response, options);
+                return sale;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao buscar pedido {saleCode}: {ex.Message}");
+                return null;
+            }
+        }
+
+
         private void InitializeTimer()
         {
-            _apiTimer = new TimerService(ProcessSalesDataAsync, TimeSpan.FromMinutes(5), Application.Current.Dispatcher);
+            _apiTimer = new TimerService(ProcessSalesDataAsync, TimeSpan.FromMinutes(2), Application.Current.Dispatcher);
             _apiTimer.OnError += (s, ex) =>
             {
                 MessageBox.Show($"Erro no timer: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -156,88 +164,108 @@ namespace NeuroApp
 
         private async void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            await LoadSalesDataFromDatabaseAsync();
+            bool success = await LoadSalesDataFromDatabaseAsync();
 
-            _apiTimer.Start();
+            if (success)
+            {
+                _apiTimer.Start();
+            }
         }
 
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            _apiTimer.Stop();
+            if (_apiTimer != null)
+            {
+                _apiTimer.Stop();
+                _apiTimer = null;
+            }
         }
 
-        private async Task LoadSalesDataFromDatabaseAsync()
+        private async Task<bool> LoadSalesDataFromDatabaseAsync()
         {
             try
             {
                 DatabaseActions database = new();
                 var salesFromDb = await database.GetSalesFromDatabaseAsync();
 
+                foreach (var sale in salesFromDb)
+                {
+                    sale.Tags = await database.GetTagsForOsAsync(sale.Code);
+                }
+
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    try
+                    SalesData.Clear();
+                    foreach (var sale in salesFromDb)
                     {
-                        SalesData.Clear();
-                        foreach (var sale in salesFromDb)
-                        {
-                            SalesData.Add(sale);
-                        }
-
-                        ApplyPrioritySorting();
-
-                        DataContext = this;
+                        SalesData.Add(sale);
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Erro ao atualizar a interface do usuário: {ex.Message}");
-                    }
+
+                    DataContext = this;
                 });
 
-                var tagMapper = new Tags();
-
-                //await Application.Current.Dispatcher.InvokeAsync(() =>
-                //{
-                //    SalesData.Clear();
-                //    foreach (var sale in salesFromDb)
-                //    {
-                //        var mappedTags = sale.Tags
-                //            .Select(tag => tagMapper.GetCustomTagById(tag.TagId))
-                //            .Where(tag => tag != null)
-                //            .ToList();
-
-                //        sale.MappedTags = mappedTags;
-
-                //        SalesData.Add(sale);
-                //    }
-
-                //    DataContext = this;
-                //});
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao carregar dados do banco: {ex.Message}");
+                return false;
             }
         }
 
-        private void DataGridSales_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        private void DataGridSales_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
         {
-            var editedElement = e.EditingElement as TextBox;
-
-            if (editedElement != null)
+            if (e.Column.Header.ToString() == "Status")
             {
-                string cellText = editedElement.Text;
-
-                var selectedRow = DataGridSales.SelectedItem as Sales;
-
-                if (selectedRow != null)
+                if (e.Row.Item is Sales selectedRow)
                 {
-                    var numeroOs = selectedRow.Code;
+                    var currentStatus = selectedRow.Status.ToString();
+                    var localStatuses = GetStatusToComboBox.GetStatusToComboBoxList<Status>()
+                        .Where(Sales.IsLocalStatus)
+                        .ToList();
 
-                    DatabaseActions databaseActions = new();
-                    databaseActions.AddObservationsAsync(cellText, numeroOs);
+                    if (!localStatuses.Contains(currentStatus))
+                    {
+                        localStatuses.Add(currentStatus);
+                    }
 
-                    selectedRow.Observation = cellText;
+                    selectedRow.StatusList.Clear();
+                    selectedRow.StatusList.AddRange(localStatuses);
                 }
+            }
+        }
+
+        private async void DataGridSales_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            try
+            {
+                if (e.Column.Header.ToString() != "Observações")
+                {
+                    return;
+                }
+
+                if (e.EditingElement is TextBox editedElement)
+                {
+                    string cellText = editedElement.Text;
+
+                    if (e.Row.Item is Sales selectedRow)
+                    {
+                        var numeroOs = selectedRow.Code;
+
+                        DatabaseActions databaseActions = new();
+                        await databaseActions.AddObservationsAsync(cellText, numeroOs);
+
+                        selectedRow.Observation = cellText;
+
+                        selectedRow.StatusList.Clear();
+                        selectedRow.StatusList.AddRange(GetStatusToComboBox.GetStatusToComboBoxList<Status>()
+                            .Where(Sales.IsLocalStatus)); 
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao salvar observação: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -308,8 +336,6 @@ namespace NeuroApp
 
                                 databaseActions.UpdatePriorityAsync(SalesData[i].Code, i, isManualValue);
                             }
-
-                            ApplyPrioritySorting();
                         }
                     }
                 }
@@ -394,7 +420,7 @@ namespace NeuroApp
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    bool sucess = await databaseActions.PauseOsAsync(_sales.Code);
+                    bool sucess = await databaseActions.PauseOsAsync(_sales.Code/*, _sales.Status*/);
 
                     if (sucess)
                     {
@@ -412,22 +438,6 @@ namespace NeuroApp
                 {
                     await LoadSalesDataFromDatabaseAsync();
                 }
-                //MessageBox.Show("Esta OS já pausada.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        private void ApplyPrioritySorting()
-        {
-            var sortedSales = SalesData
-                .OrderByDescending(sale => sale.IsManual)
-                .ThenBy(sale => sale.Priority)
-                .ThenByDescending(sale => sale.ApprovedAt ?? DateTime.MinValue)
-                .ToList();
-
-            SalesData.Clear();
-            foreach (var sale in sortedSales)
-            {
-                SalesData.Add(sale);
             }
         }
 
@@ -471,6 +481,8 @@ namespace NeuroApp
                         selectedSale.IsStatusModified = true;
                         Status? enumStatus = GetStatusToComboBox.ConvertDisplayToEnum<Status>(selectedStatus);
 
+                        if (!enumStatus.HasValue || selectedSale.Status.ToString() == enumStatus.ToString())
+                            return;
                         DatabaseActions databaseActions = new();
                         databaseActions.UpdateStatusOnDatabaseAsync(selectedSale.Code, enumStatus.ToString());
 

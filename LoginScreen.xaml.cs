@@ -63,8 +63,13 @@ namespace NeuroApp
         {
             if (await Login())
             {
-                new MainWindow().Show();
-                Close();
+                MainWindow mainWindow = new MainWindow
+                {
+                    DataContext = MainViewModel.Instance
+                };
+
+                mainWindow.Show();
+                this.Close();
             }
             else
             {

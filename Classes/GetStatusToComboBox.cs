@@ -13,7 +13,6 @@ namespace NeuroApp.Classes
         private static readonly Dictionary<string, string> NameMapping = new()
         {
             { "Emexecução", "Em Execução" },
-            { "Pausada", "Pausada" },
             { "ControledeQualidade", "Controle de Qualidade" },
             { "AprovadoQualidade", "Aprovado na Qualidade" },
             { "ReprovadoQualidade", "Reprovado na Qualidade" },

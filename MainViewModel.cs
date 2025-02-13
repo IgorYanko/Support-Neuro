@@ -74,8 +74,18 @@ namespace NeuroApp
 
         public ICommand ShowCockpitScreen_ { get; }
         public ICommand ShowCustomersScreen_ { get; }
-        public ICommand ShowFinancesScreen_ { get; }
-        public ICommand ShowSoScreen_ { get; }
+
+        private static MainViewModel _instance;
+
+        public static MainViewModel Instance
+        {
+            get
+            {
+                if (_instance == null)
+                    _instance = new MainViewModel();
+                return _instance;
+            }
+        }
 
         public MainViewModel()
         {
@@ -84,16 +94,15 @@ namespace NeuroApp
                 () => CurrentView != null
             );
 
-            ShowCockpitScreen_ = new RelayCommand(() => CurrentView = new Cockpit());
+            ShowCockpitScreen_ = new RelayCommand(() => CurrentView = new Cockpit(MainViewModel.Instance));
             ShowCustomersScreen_ = new RelayCommand(() => CurrentView = new Screens.Customers());
-            ShowFinancesScreen_ = new RelayCommand(() => CurrentView = new Cockpit());
-            ShowSoScreen_ = new RelayCommand(() => CurrentView = new Cockpit());
 
             ShowHomeScreen();
         }
 
         public void ShowHomeScreen()
         {
+            Console.WriteLine("🏠 Indo para a HomeScreen!");
             CurrentView = new HomeScreen(this);
         }
 
