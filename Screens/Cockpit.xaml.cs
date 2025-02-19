@@ -1,13 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using System.Data;
-using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Extensions.Configuration;
@@ -19,16 +17,14 @@ namespace NeuroApp
     public partial class Cockpit : UserControl
     {
         public ObservableCollection<Sales> SalesData { get; set; } = new ObservableCollection<Sales>();
-        private TimerService _apiTimer;
         private ObservableCollection<Sales> _cachedSalesData = new();
+        private TimerService _apiTimer;
 
         private DataGridRow _draggedRow;
         private Point _startPoint;
         private bool _isScrolling = false;
 
-        private Sales _sales;
-
-        public Cockpit(MainViewModel mainViewModel)
+        public Cockpit(MainViewModel mainViewModel) //Funcionando ok
         {
             InitializeComponent();
             InitializeTimer();
@@ -36,37 +32,34 @@ namespace NeuroApp
             Console.WriteLine($"Cockpit inicializado. ViewModel: {mainViewModel}");
         }
 
-        public async Task ProcessSalesDataAsync()
+        public async Task ProcessSalesDataAsync() //Funcionando ok
         {
             try
             {
-                var apiSales = await FetchSalesDataAsync();
                 DatabaseActions database = new();
+                var salesFromDb = await database.GetSalesFromDatabaseAsync();
+                _cachedSalesData = new ObservableCollection<Sales>(salesFromDb);
 
-                _cachedSalesData = new ObservableCollection<Sales>(apiSales);
+                var apiSales = await FetchSalesDataAsync();
 
                 foreach (var apiSale in apiSales)
                 {
-                    var cachedSale = _cachedSalesData.FirstOrDefault(s => s.Code == apiSale.Code);
+                    var cachedSale = _cachedSalesData?.FirstOrDefault(s => s.Code == apiSale.Code);
 
-                    if (cachedSale != null)
-                    {
-                        if (cachedSale.IsStatusModified && Sales.IsLocalStatus(cachedSale.Status.ToString()))
-                        {
-                            continue;
-                        }
-
-                        if (!Sales.IsLocalStatus(apiSale.Status.ToString()) && cachedSale.Status.ToString() != apiSale.Status.ToString())
-                        {
-                            cachedSale.Status = apiSale.Status;
-                            cachedSale.IsStatusModified = false;
-                        }
-                    }
-                    else
+                    if (cachedSale == null && apiSale.Status.ToString() != "Faturado")
                     {
                         await database.VerifyAndSave(apiSale);
                         apiSale.Tags = await database.GetTagsForOsAsync(apiSale.Code);
                         _cachedSalesData?.Add(apiSale);
+                    }
+                    else if (cachedSale == null && apiSale.Status.ToString() == "Faturado")
+                    {
+                        continue;
+                    }
+                    else if (cachedSale.Status != apiSale.Status)
+                    {
+                        cachedSale.Status = apiSale.Status;
+                        cachedSale.IsStatusModified = false;
                     }
                 }
 
@@ -74,7 +67,7 @@ namespace NeuroApp
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao processar dados: {ex.Message}");
+                MessageBox.Show($"Erro ao processar dados: {ex.Message}");
             }
         }
 
@@ -186,23 +179,27 @@ namespace NeuroApp
             try
             {
                 DatabaseActions database = new();
-                var salesFromDb = await database.GetSalesFromDatabaseAsync();
 
-                foreach (var sale in salesFromDb)
+                var updatedSalesData = new List<Sales>();
+
+                foreach (var sale in _cachedSalesData)
                 {
                     sale.Tags = await database.GetTagsForOsAsync(sale.Code);
+                    updatedSalesData.Add(sale);
                 }
 
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     SalesData.Clear();
-                    foreach (var sale in salesFromDb)
+                    foreach (var sale in updatedSalesData)
                     {
+                        
                         SalesData.Add(sale);
                     }
 
                     DataContext = this;
                 });
+
 
                 return true;
             }
@@ -383,15 +380,20 @@ namespace NeuroApp
             var row = (DataGridRow)((DependencyObject)e.OriginalSource).GetParentOfType<DataGridRow>();
             if (row != null)
             {
-                _sales = (Sales)row.Item;
+                var selectedSale = (Sales)row.Item;
+
+                Console.WriteLine($"[MouseRightButtonDown] OS selecionada: {selectedSale.Code} - Status: {selectedSale.Status}");
             }
         }
 
+
         private void RemoveOs_Click(object sender, RoutedEventArgs e)
         {
-            if (_sales != null)
+            var selectedSale = DataGridSales.SelectedItem as Sales;
+
+            if (selectedSale != null)
             {
-                var result = MessageBox.Show($"Deseja remover a OS nº {_sales.Code}?",
+                var result = MessageBox.Show($"Deseja remover a OS nº {selectedSale.Code}?",
                                               "Confirmação",
                                               MessageBoxButton.YesNo,
                                               MessageBoxImage.Question);
@@ -399,9 +401,9 @@ namespace NeuroApp
                 if (result == MessageBoxResult.Yes)
                 {
                     DatabaseActions databaseActions = new();
-                    databaseActions.RemoveOs(_sales.Code);
+                    databaseActions.RemoveOs(selectedSale.Code);
 
-                    SalesData.Remove(_sales);
+                    SalesData.Remove(selectedSale);
                     MessageBox.Show("OS removida com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -409,33 +411,36 @@ namespace NeuroApp
 
         private async void PauseOs_Click(object sender, RoutedEventArgs e)
         {
-            DatabaseActions databaseActions = new();
+            DatabaseActions database = new();
+            var selectedSale = DataGridSales.SelectedItem as Sales;
 
-            if (_sales != null && !_sales.IsPaused)
+            if (selectedSale != null && !selectedSale.IsPaused)
             {
-                var result = MessageBox.Show($"Deseja pausar a OS nº {_sales.Code}?",
+                var result = MessageBox.Show($"Deseja pausar a OS nº {selectedSale.Code}?",
                                               "Confirmação",
                                               MessageBoxButton.YesNo,
                                               MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    bool sucess = await databaseActions.PauseOsAsync(_sales.Code/*, _sales.Status*/);
+                    bool sucess = await database.PauseOsAsync(selectedSale.Code, selectedSale.Status);
 
                     if (sucess)
                     {
-                        _sales.IsPaused = true;
-                        SalesData.First(s => s.Code == _sales.Code).IsPaused = true;
+                        selectedSale.IsPaused = true;
+                        SalesData.First(s => s.Code == selectedSale.Code).IsPaused = true;
                         await LoadSalesDataFromDatabaseAsync();
                     }
                 }
             }
             else
             {
-                bool sucess = await databaseActions.UnpauseOsAsync(_sales.Code);
+                bool sucess = await database.UnpauseOsAsync(selectedSale.Code);
 
                 if (sucess)
                 {
+                    selectedSale.IsPaused = false;
+                    SalesData.First(s => s.Code == selectedSale.Code).IsPaused = false;
                     await LoadSalesDataFromDatabaseAsync();
                 }
             }
@@ -481,8 +486,8 @@ namespace NeuroApp
                         selectedSale.IsStatusModified = true;
                         Status? enumStatus = GetStatusToComboBox.ConvertDisplayToEnum<Status>(selectedStatus);
 
-                        if (!enumStatus.HasValue || selectedSale.Status.ToString() == enumStatus.ToString())
-                            return;
+                        if (!enumStatus.HasValue || selectedSale.Status.ToString() == enumStatus.ToString()) return;
+
                         DatabaseActions databaseActions = new();
                         databaseActions.UpdateStatusOnDatabaseAsync(selectedSale.Code, enumStatus.ToString());
 
@@ -491,6 +496,11 @@ namespace NeuroApp
                 }
             }
         }
+
+        //private void HelpButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    DialogHost.OpenDialogCommand.Execute(null, HelpDialogHost);
+        //}
     }
 }
 

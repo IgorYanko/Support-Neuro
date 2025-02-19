@@ -137,7 +137,7 @@ namespace NeuroApp.Classes
 
                     var (currentStatus, currentApprovedAt, currentPriority) = await GetCurrentStatusAsync(connection, sale.Code);
 
-                    DateTime? approvedAt = currentApprovedAt ?? (sale.Status == Status.Aprovado ? DateTime.UtcNow : null);
+                    DateTime? approvedAt = currentApprovedAt ?? (sale.Status == Status.Aprovado ? DateTime.Now : null);
 
                     DateTime? deadline = sale.Status == Status.Aprovado
                         ? BusinessDayCalculator.CalculateDeadline(approvedAt.Value)
@@ -258,9 +258,11 @@ namespace NeuroApp.Classes
                         SELECT *,
                             COALESCE(approvedat, '1970-01-01') AS approvedat_fallback,
                             COALESCE(arrivaldate, '1970-01-01') AS arrivaldate_fallback,
-                            COALESCE(pauseddate, '1970-01-01') AS pauseddate_fallback
+                            COALESCE(pauseddate, '1970-01-01') AS pauseddate_fallback,
+                            COALESCE(quotationdate, NULL) AS quotationdate_fallback
                         FROM serviceorders
                         WHERE status != 'Faturado'
+                              OR (status = 'Faturado' AND ostype = 'Venda' AND arrivaldate >= NOW() - INTERVAL '7 days')
                         ORDER BY
                             CASE
                                 WHEN ismanual = true THEN priority
@@ -273,7 +275,6 @@ namespace NeuroApp.Classes
                                         WHEN 'EsperandoColeta' THEN 0
                                         WHEN 'Aprovado' THEN 1
                                         WHEN 'Emorçamento' THEN 2
-                                        WHEN 'Pausada' THEN 3
                                         WHEN 'Emaberto' THEN 4
                                         WHEN 'Faturado' THEN 5
                                         ELSE 6 
@@ -380,19 +381,19 @@ namespace NeuroApp.Classes
 
         private static readonly Dictionary<string, string> SaleStatusMappings = new()
         {
-            { "Emaberto", "Em aberto" },
-            { "Emorçamento", "Em orçamento" },
+            { "Emaberto", "Em Aberto" },
+            { "Emorçamento", "Em Orçamento" },
             { "Aprovado", "Aprovado" },
             { "Faturado", "Faturado" },
             { "OrçamentoRecusado", "Orçamento Recusado" },
             { "Cancelado", "Cancelado" },
             { "Recusado", "Recusado" },
-            { "Emexecução", "Em execução" },
+            { "Emexecução", "Em Execução" },
             { "Pausada", "Pausada" },
-            { "ControledeQualidade", "Controle de qualidade" },
-            { "AprovadoQualidade", "Aprovado na qualidade" },
-            { "ReprovadoQualidade", "Reprovado na qualidade" },
-            { "EsperandoColeta", "Esperando coleta" }
+            { "ControledeQualidade", "Controle de Qualidade" },
+            { "AprovadoQualidade", "Aprovado na Qualidade" },
+            { "ReprovadoQualidade", "Reprovado na Qualidade" },
+            { "EsperandoColeta", "Esperando Coleta" }
         };
 
         public static string MapToSaleStatus(string value)
@@ -432,7 +433,8 @@ namespace NeuroApp.Classes
                 IsPaused = reader["pausedDate"] != DBNull.Value,
                 IsManual = GetNulableBool(reader["ismanual"]) ?? false,
                 Priority = CalculatePriority(GetValueOrDefault(reader["status"], "Unknown")),
-                ApprovedAt = GetNullableDateTime(reader["approvedat"])
+                ApprovedAt = GetNullableDateTime(reader["approvedat"]),
+                QuotationDate = GetNullableDateTime(reader["quotationdate_fallback"])
             };
 
             if (sale.DisplayStatus == "Aprovado" && sale.ApprovedAt.HasValue)
@@ -544,7 +546,7 @@ namespace NeuroApp.Classes
             }
         }
 
-        public async Task<bool> PauseOsAsync(string osCode)/*, Status status)*/
+        public async Task<bool> PauseOsAsync(string osCode, Status status)
         {
             try
             {
@@ -565,8 +567,8 @@ namespace NeuroApp.Classes
 
                 var result = await command.ExecuteScalarAsync();
 
-                //if (status == Status.Aprovado)
-                //{
+                if (status.ToString() == "Aprovado"|| Sales.IsLocalStatus(status.ToString()))
+                {
                     if (result != null)
                     {
                         MessageBox.Show($"OS {osCode} pausada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -577,7 +579,11 @@ namespace NeuroApp.Classes
                         MessageBox.Show($"A OS {osCode} não pode ser pausada. Verifique se já está aprovada.", "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return false;
                     }
-                //}
+                }
+                else
+                {
+                    return false;
+                }
             }
             catch (Exception ex)
             {
@@ -590,7 +596,7 @@ namespace NeuroApp.Classes
         {
             try
             {
-                using var connection = new NpgsqlConnection(ConnectionString);
+                  using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
                 string selectQuery = "SELECT pausedDate, deadline, status FROM serviceorders WHERE numos = @OsCode";
@@ -613,7 +619,12 @@ namespace NeuroApp.Classes
                     }
                 }
 
-                if (pausedDate.HasValue && status == "Aprovado")
+                List<string> localStatuses = new() { "Aprovado", "Em Execução", "Controle de Qualidade", "Aprovado na Qualidade", "Reprovado na Qualidade", "Esperando Coleta" };
+                string normalizedStatus = status.Replace(" ", "").ToLower();
+
+                bool isLocal = localStatuses.Any(s => s.Replace(" ", "").ToLower() == normalizedStatus);
+
+                if (pausedDate.HasValue && isLocal)
                 {
                     if (!(pausedDate.Value == DateTime.UtcNow))
                     {

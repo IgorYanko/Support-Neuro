@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:classes="clr-namespace:NeuroApp.Classes"
              xmlns:sys="clr-namespace:NeuroApp.Screens"
+             xmlns:mat="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DesignHeight="750" d:DesignWidth="450">
 
@@ -19,13 +20,77 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Background="#F9F9F9" Height="50">
+        <StackPanel Grid.Row="0" Background="#F9F9F9" Height="50" Orientation="Horizontal">
+            <!--<Button x:Name="HelpButton" ToolTip="Guia de Cores" Click="HelpButton_Click">
+                <Image Source="pack://application:,,,/assets/colorfulBackground.jpeg" Width="30" Height="30"/>
+            </Button>-->
+            
             <TextBlock Text="Cockpit"
                        FontSize="25"
                        FontWeight="Bold"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"/>
 
+            <mat:DialogHost x:Name="HelpDialogHost" CloseOnClickAway="True">
+                <mat:DialogHost.DialogContent>
+                    <StackPanel Width="300">
+                        <TextBlock Text="Guia de Cores" FontSize="18" FontWeight="Bold" Margin="0 0 0 10" HorizontalAlignment="Center"/>
+                        <ListBox>
+                            
+                            <ListBoxItem>
+                                <StackPanel Orientation="Horizontal" Margin="5">
+                                    <Rectangle Width="20" Height="20" Fill="#B0D7B0" Stroke="Black" Margin="5"/>
+                                    <TextBlock Text="Pedidos aprovados: No prazo!" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+
+                            <ListBoxItem>
+                                <StackPanel Orientation="Horizontal" Margin="5">
+                                    <Rectangle Width="20" Height="20" Fill="#ECEC53" Stroke="Black" Margin="5"/>
+                                    <TextBlock Text="Pedidos aprovados: Atenção!" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+
+                            <ListBoxItem>
+                                <StackPanel Orientation="Horizontal" Margin="5">
+                                    <Rectangle Width="20" Height="20" Fill="#3C1FE3E6" Stroke="Black" Margin="5"/>
+                                    <TextBlock Text="Em orçamento: No prazo!" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+
+                            <ListBoxItem>
+                                <StackPanel Orientation="Horizontal" Margin="5">
+                                    <Rectangle Width="20" Height="20" Fill="#FFDB58" Stroke="Black" Margin="5"/>
+                                    <TextBlock Text="Em orçamento: Atenção!" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+
+                            <ListBoxItem>
+                                <StackPanel Orientation="Horizontal" Margin="5">
+                                    <Rectangle Width="20" Height="20" Fill="#A4D9EB" Stroke="Black" Margin="5"/>
+                                    <TextBlock Text="Em aberto: No prazo!" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+
+                            <ListBoxItem>
+                                <StackPanel Orientation="Horizontal" Margin="5">
+                                    <Rectangle Width="20" Height="20" Fill="#EBE0A4" Stroke="Black" Margin="5"/>
+                                    <TextBlock Text="Em aberto: Atenção!" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+
+                            <ListBoxItem>
+                                <StackPanel Orientation="Horizontal" Margin="5">
+                                    <Rectangle Width="20" Height="20" Fill="#EC5353" Stroke="Black" Margin="5"/>
+                                    <TextBlock Text="Próximo do fim do prazo/Atrasado" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            
+                        </ListBox>
+                    </StackPanel>
+                </mat:DialogHost.DialogContent>
+            </mat:DialogHost>
+            
         </StackPanel>
 
         <DataGrid x:Name="DataGridSales" 
@@ -91,6 +156,16 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
+
+                <DataGridTextColumn Header="Dias Restantes" Width="Auto" Binding="{Binding RemainingBusinessDays}" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
 
                 <DataGridTextColumn Header="Cliente" Width="Auto" Binding="{Binding PersonName}" IsReadOnly="True">
                     <DataGridTextColumn.ElementStyle>

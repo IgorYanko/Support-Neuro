@@ -121,5 +121,11 @@ namespace NeuroApp.Classes
             int businessDaysToAdd = 20;
             return AddBusinessDays(startDate,businessDaysToAdd);
         }
+
+        public static DateTime CalculateQuotationExpirationDate(DateTime startDate)
+        {
+            int businessDaysToAdd = 10;
+            return AddBusinessDays(startDate, businessDaysToAdd);
+        }
     }
 }

@@ -162,7 +162,7 @@ namespace NeuroApp.Classes
             return localStatuses.Contains(status);
         }
 
-        public List<string> StatusList { get; } = GetStatusToComboBox.GetStatusToComboBoxList<Status>().GetRange(7, 4);
+        public List<string> StatusList { get; } = GetStatusToComboBox.GetStatusToComboBoxList<Status>().GetRange(7, 5);
 
         [JsonPropertyName("tags")]
         public List<Tag> Tags { get; set; } = new();
@@ -198,19 +198,14 @@ namespace NeuroApp.Classes
 
         public bool IsStatusModified { get; set; } = false;
 
+
+
+        /// <summary>
+        /// Dias restantes de pedidos aprovados
+        /// </summary>
         public DateTime? ApprovedAt { get; set; }
-
+        
         public DateTime? Deadline { get; set; }
-
-        public DateTime? ExpirationDate
-        {
-            get
-            {
-                if (ApprovedAt.HasValue || Status == Status.Aprovado) return null;
-
-                return BusinessDayCalculator.CalculateExpirationDate(DateCreated);
-            }
-        }
 
         public int? RemainingBusinessDays
         {
@@ -220,6 +215,74 @@ namespace NeuroApp.Classes
 
                 DateTime finalDate = ApprovedAt.Value.AddDays(BUSINESS_DAYS_LIMIT);
                 return BusinessDayCalculator.CalculateBusinessDays(DateTime.Now, finalDate);
+            }
+        }
+
+        public DateTime? CheckoutDate
+        {
+            get
+            {
+                if (ApprovedAt.HasValue || Status == Status.Aprovado) return null;
+
+                return BusinessDayCalculator.CalculateExpirationDate(DateCreated);
+            }
+        }
+
+        public int? RemainingDaysToCheckout
+        {
+            get
+            {
+                if (CheckoutDate.HasValue)
+                {
+                    if (DateTime.Now > CheckoutDate)
+                    {
+                        return -1;
+                    }
+                    else
+                    {
+                        TimeSpan diff = CheckoutDate.Value - DateTime.Now;
+                        return diff.Days;
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        public DateTime? QuotationDate { get; set; }
+
+        public DateTime? MaxApprovationDate 
+        { 
+            get
+            {
+                return QuotationDate.HasValue
+                    ? BusinessDayCalculator.CalculateQuotationExpirationDate(QuotationDate.Value)
+                    : null;
+            }
+        }
+
+        public int? RemainingQuotationDays
+        {
+            get
+            {
+                if (QuotationDate.HasValue)
+                {
+                    if (DateTime.Now > MaxApprovationDate)
+                    {
+                        return -1;
+                    }
+                    else
+                    {
+                        TimeSpan diff = MaxApprovationDate.Value - DateTime.Now;
+                        return diff.Days;
+                    }
+                }
+                else 
+                { 
+                    return null; 
+                }
             }
         }
     }
