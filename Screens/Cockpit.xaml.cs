@@ -24,7 +24,7 @@ namespace NeuroApp
         private Point _startPoint;
         private bool _isScrolling = false;
 
-        public Cockpit(MainViewModel mainViewModel) //Funcionando ok
+        public Cockpit(MainViewModel mainViewModel)
         {
             InitializeComponent();
             InitializeTimer();
@@ -32,12 +32,13 @@ namespace NeuroApp
             Console.WriteLine($"Cockpit inicializado. ViewModel: {mainViewModel}");
         }
 
-        public async Task ProcessSalesDataAsync() //Funcionando ok
+        public async Task ProcessSalesDataAsync()
         {
             try
             {
                 DatabaseActions database = new();
                 var salesFromDb = await database.GetSalesFromDatabaseAsync();
+                
                 _cachedSalesData = new ObservableCollection<Sales>(salesFromDb);
 
                 var apiSales = await FetchSalesDataAsync();
@@ -46,7 +47,12 @@ namespace NeuroApp
                 {
                     var cachedSale = _cachedSalesData?.FirstOrDefault(s => s.Code == apiSale.Code);
 
-                    if (cachedSale == null && apiSale.Status.ToString() != "Faturado")
+                    if (cachedSale != null && cachedSale.Excluded)
+                    {
+                        continue;
+                    }
+
+                    if (cachedSale == null && apiSale.Status.ToString() != "Faturado" && !apiSale.Excluded)
                     {
                         await database.VerifyAndSave(apiSale);
                         apiSale.Tags = await database.GetTagsForOsAsync(apiSale.Code);
@@ -191,9 +197,8 @@ namespace NeuroApp
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     SalesData.Clear();
-                    foreach (var sale in updatedSalesData)
+                    foreach (var sale in updatedSalesData.Where(s => !s.Excluded))
                     {
-                        
                         SalesData.Add(sale);
                     }
 

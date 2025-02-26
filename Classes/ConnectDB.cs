@@ -255,39 +255,37 @@ namespace NeuroApp.Classes
                 await connection.OpenAsync();
 
                 var query = @"
-                        SELECT *,
-                            COALESCE(approvedat, '1970-01-01') AS approvedat_fallback,
-                            COALESCE(arrivaldate, '1970-01-01') AS arrivaldate_fallback,
-                            COALESCE(pauseddate, '1970-01-01') AS pauseddate_fallback,
-                            COALESCE(quotationdate, NULL) AS quotationdate_fallback
-                        FROM serviceorders
-                        WHERE status != 'Faturado'
-                              OR (status = 'Faturado' AND ostype = 'Venda' AND arrivaldate >= NOW() - INTERVAL '7 days')
-                        ORDER BY
-                            CASE
-                                WHEN ismanual = true THEN priority
-                                ELSE
-                                    CASE status
-                                        WHEN 'Emexecução' THEN 0
-                                        WHEN 'ControledeQualidade' THEN 0
-                                        WHEN 'ReprovadoQualidade' THEN 0
-                                        WHEN 'AprovadoQualidade' THEN 0
-                                        WHEN 'EsperandoColeta' THEN 0
-                                        WHEN 'Aprovado' THEN 1
-                                        WHEN 'Emorçamento' THEN 2
-                                        WHEN 'Emaberto' THEN 4
-                                        WHEN 'Faturado' THEN 5
-                                        ELSE 6 
-                                    END
-                            END,
-                            CASE 
-                                WHEN status IN ('Emexecução', 'Controledequalidade', 'ReprovadoQualidade', 'AprovadoQualidade', 'EsperandoColeta') THEN approvedat
-                                WHEN status = 'Aprovado' THEN approvedat
-                                WHEN status = 'Emorçamento' THEN arrivaldate
-                                WHEN status = 'Pausada' THEN pauseddate
-                                WHEN status = 'Emaberto' THEN COALESCE(arrivaldate, '1970-01-01')
-                                ELSE NULL
-                            END;";
+                              SELECT *,
+                                  COALESCE(approvedat, '1970-01-01') AS approvedat_fallback,
+                                  COALESCE(arrivaldate, '1970-01-01') AS arrivaldate_fallback,
+                                  COALESCE(pauseddate, '1970-01-01') AS pauseddate_fallback,
+                                  COALESCE(quotationdate, NULL) AS quotationdate_fallback
+                              FROM serviceorders
+                              WHERE 
+                                   status != 'Faturado'
+                                   OR (status = 'Faturado' AND ostype = 'Venda' AND arrivaldate >= NOW() - INTERVAL '7 days')
+                              ORDER BY
+                                    CASE
+                                        WHEN ismanual = true THEN priority
+                                        ELSE
+                                            CASE 
+                                                WHEN ostype = 'Venda' THEN 1 -- Adicionando regra para 'Faturado' e 'Venda' ter prioridade 1
+                                                WHEN status IN ('Emexecução', 'ControledeQualidade', 'ReprovadoQualidade', 'AprovadoQualidade', 'EsperandoColeta') THEN 0
+                                                WHEN status = 'Aprovado' THEN 1
+                                                WHEN status = 'Emorçamento' THEN 2
+                                                WHEN status = 'Emaberto' THEN 4
+                                                WHEN status = 'Faturado' THEN 5
+                                                ELSE 6 
+                                            END
+                                    END,
+                                    CASE 
+                                        WHEN status IN ('Emexecução', 'Controledequalidade', 'ReprovadoQualidade', 'AprovadoQualidade', 'EsperandoColeta') THEN approvedat
+                                        WHEN status = 'Aprovado' THEN approvedat
+                                        WHEN status = 'Emorçamento' THEN arrivaldate
+                                        WHEN status = 'Pausada' THEN pauseddate
+                                        WHEN status = 'Emaberto' THEN COALESCE(arrivaldate, '1970-01-01')
+                                        ELSE NULL
+                                    END;";
 
                 using var command = new NpgsqlCommand(query, connection);
                 using var reader = await command.ExecuteReaderAsync();
@@ -434,7 +432,8 @@ namespace NeuroApp.Classes
                 IsManual = GetNulableBool(reader["ismanual"]) ?? false,
                 Priority = CalculatePriority(GetValueOrDefault(reader["status"], "Unknown")),
                 ApprovedAt = GetNullableDateTime(reader["approvedat"]),
-                QuotationDate = GetNullableDateTime(reader["quotationdate_fallback"])
+                QuotationDate = GetNullableDateTime(reader["quotationdate_fallback"]),
+                Excluded = reader["excluded"] != DBNull.Value && (bool)reader["excluded"]
             };
 
             if (sale.DisplayStatus == "Aprovado" && sale.ApprovedAt.HasValue)
@@ -529,12 +528,12 @@ namespace NeuroApp.Classes
                 using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
-                string removeTagsQuery = "DELETE FROM salestags WHERE oscode = @oscode";
+                string removeTagsQuery = "UPDATE salestags SET excluded = true WHERE oscode = @oscode";
                 using var removeTagsCommand = new NpgsqlCommand(removeTagsQuery, connection);
                 removeTagsCommand.Parameters.AddWithValue("oscode", osCode);
                 await removeTagsCommand.ExecuteNonQueryAsync();
 
-                string removeQuery = "DELETE FROM serviceorders WHERE numos = @oscode";
+                string removeQuery = "UPDATE serviceorders SET excluded = true WHERE numos = @oscode";
                 using var removeOsCommand = new NpgsqlCommand(removeQuery, connection);
                 removeOsCommand.Parameters.AddWithValue("oscode", osCode);
                 await removeOsCommand.ExecuteNonQueryAsync();

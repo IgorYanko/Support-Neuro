@@ -112,7 +112,7 @@ namespace NeuroApp.Classes
 
         public static DateTime CalculateDeadline(DateTime startDate)
         {
-            int businessDaysToAdd = 10;
+            int businessDaysToAdd = 7;
             return AddBusinessDays(startDate, businessDaysToAdd);
         }
 

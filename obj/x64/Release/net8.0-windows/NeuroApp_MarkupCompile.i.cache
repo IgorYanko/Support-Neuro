@@ -1,20 +1,20 @@
 ﻿NeuroApp
 1.0.0.0
 
-exe
+winexe
 C#
 .cs
-C:\Users\supor\source\repos\Support-Neuro\obj\x64\Release\net8.0-windows\
+C:\Users\supor\Source\Repos\Support-Neuro\obj\x64\Release\net8.0-windows\
 NeuroApp
 none
 false
 TRACE;RELEASE;NET;NET8_0;NETCOREAPP
-C:\Users\supor\source\repos\Support-Neuro\App.xaml
+C:\Users\supor\Source\Repos\Support-Neuro\App.xaml
 61523035077
 11133096477
 281766609759
 221-1984524683
 LoginScreen.xaml;MainWindow.xaml;Screens\ClientPage.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\HomeScreen.xaml;
 
-False
+True
 

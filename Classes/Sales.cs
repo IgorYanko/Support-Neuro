@@ -92,7 +92,7 @@ namespace NeuroApp.Classes
 
     public class Sales
     {
-        private const int BUSINESS_DAYS_LIMIT = 10;
+        private const int BUSINESS_DAYS_LIMIT = 7;
         private const int WAITING_DAYS_LIMIT = 20;
         private const int NOT_APPROVED_FLAG = -999;
 
@@ -198,6 +198,7 @@ namespace NeuroApp.Classes
 
         public bool IsStatusModified { get; set; } = false;
 
+        public bool Excluded {  get; set; }
 
 
         /// <summary>
@@ -213,7 +214,7 @@ namespace NeuroApp.Classes
             {
                 if (!ApprovedAt.HasValue) return NOT_APPROVED_FLAG;
 
-                DateTime finalDate = ApprovedAt.Value.AddDays(BUSINESS_DAYS_LIMIT);
+                DateTime finalDate = BusinessDayCalculator.CalculateDeadline(ApprovedAt.Value);
                 return BusinessDayCalculator.CalculateBusinessDays(DateTime.Now, finalDate);
             }
         }

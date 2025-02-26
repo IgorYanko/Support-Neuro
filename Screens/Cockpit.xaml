@@ -20,7 +20,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Background="#F9F9F9" Height="50" Orientation="Horizontal">
+        <StackPanel Grid.Row="0" Background="#F9F9F9" Height="50">
             <!--<Button x:Name="HelpButton" ToolTip="Guia de Cores" Click="HelpButton_Click">
                 <Image Source="pack://application:,,,/assets/colorfulBackground.jpeg" Width="30" Height="30"/>
             </Button>-->
@@ -156,16 +156,6 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-
-                <DataGridTextColumn Header="Dias Restantes" Width="Auto" Binding="{Binding RemainingBusinessDays}" IsReadOnly="True">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
 
                 <DataGridTextColumn Header="Cliente" Width="Auto" Binding="{Binding PersonName}" IsReadOnly="True">
                     <DataGridTextColumn.ElementStyle>
