@@ -10,22 +10,19 @@ namespace NeuroApp.Classes
     {
         private const int NOT_APPROVED_FLAG = -999;
 
-        private static readonly SolidColorBrush DefaultForeground = new(Color.FromRgb(0, 0, 0));
-        private static readonly SolidColorBrush DefaultBackground = new(Color.FromRgb(255, 255, 255));
-
-        private static readonly SolidColorBrush PausedForeground = new(Color.FromRgb(115, 115, 115));
-        private static readonly SolidColorBrush PausedBackground = new(Color.FromRgb(225, 225, 225));
-
-        private static readonly SolidColorBrush SafeApprovedBackground = new(Color.FromArgb(255, 168, 230, 168));
-        private static readonly SolidColorBrush WarningApprovedBackground = new(Color.FromArgb(255, 242, 227, 148));
-        private static readonly SolidColorBrush DangerForeground = new(Color.FromRgb(255, 255, 255));
-        private static readonly SolidColorBrush DangerBackground = new(Color.FromArgb(230, 236, 83, 83));
-
-        private static readonly SolidColorBrush SafeCheckoutBackground = new(Color.FromArgb(190, 194, 221, 194));
-        private static readonly SolidColorBrush WarningCheckoutBackground = new(Color.FromArgb(200, 235, 224, 164));
-
-        private static readonly SolidColorBrush SafeQuotationBackground = new(Color.FromArgb(200, 180, 225, 180));
-        private static readonly SolidColorBrush WarningQuotationBackground = new(Color.FromArgb(190, 245, 225, 166));
+        private static class Colors
+        {
+            public static readonly SolidColorBrush DefaultForeground = new(Color.FromRgb(0, 0, 0));
+            public static readonly SolidColorBrush DefaultBackground = new(Color.FromRgb(255, 255, 255));
+            public static readonly SolidColorBrush PausedForeground = new(Color.FromRgb(115, 115, 115));
+            public static readonly SolidColorBrush PausedBackground = new(Color.FromRgb(225, 225, 225));
+            public static readonly SolidColorBrush DangerForeground = new(Color.FromRgb(255, 255, 255));
+            public static readonly SolidColorBrush DangerBackground = new(Color.FromRgb(236, 83, 83));
+            public static readonly SolidColorBrush LateForeground = new(Color.FromRgb(236, 83, 83));
+            public static readonly SolidColorBrush SafeForeground = new(Color.FromRgb(22, 145, 65));
+            public static readonly SolidColorBrush SafeBackground = new(Color.FromArgb(55, 22, 145, 65));
+            public static readonly SolidColorBrush WarningBackground = new(Color.FromArgb(115, 255, 215, 0));
+        }
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -34,87 +31,74 @@ namespace NeuroApp.Classes
                 return Brushes.Transparent;
             }
 
+            string status = sale.DisplayStatus?.ToString() ?? string.Empty;
+            bool isForeground = parameter?.ToString() == "Foreground";
+
             if (sale.IsPaused)
             {
-                return parameter?.ToString() == "Foreground" ? PausedForeground : PausedBackground;
+                return parameter?.ToString() == "Foreground" ? Colors.PausedForeground : Colors.PausedBackground;
             }
 
-            int remainingDays;
-            string status = sale.DisplayStatus?.ToString() ?? string.Empty;
+            int remainingDays = CalculateRemainingDays(sale, status);
 
-            if (status == "Aprovado" || Sales.IsLocalStatus(status))
+            if (status == "Aprovado" || SalesUtils.IsLocalStatus(status))
             {
-                remainingDays = sale.RemainingBusinessDays ?? NOT_APPROVED_FLAG;
-
-                if (remainingDays >= 4)
-                {
-                    return parameter?.ToString() == "Foreground" ? DefaultForeground : SafeApprovedBackground;
-                }
-                else if (remainingDays > 1)
-                {
-                    return parameter?.ToString() == "Foreground" ? DefaultForeground : WarningApprovedBackground;
-                }
-                else
-                {
-                    return parameter?.ToString() == "Foreground" ? DangerForeground : DangerBackground;
-                }
+                return GetBrushForApprovedStatus(remainingDays, isForeground);
             }
-            //else if (status == "Em Orçamento")
-            //{
-            //    remainingDays = sale.RemainingQuotationDays ?? NOT_APPROVED_FLAG;
 
-            //    if (remainingDays >= 4)
-            //    {
-            //        return parameter?.ToString() == "Foreground" ? DefaultForeground : SafeQuotationBackground;
-            //    }
-            //    else if (remainingDays > 1)
-            //    {
-            //        return parameter?.ToString() == "Foreground" ? DefaultForeground : WarningQuotationBackground;
-            //    }
-            //    else
-            //    {
-            //        return parameter?.ToString() == "Foreground" ? DangerForeground : DangerBackground;
-            //    }
-            //}
-            //else if (status == "Em Aberto")
-            //{
-            //    remainingDays = sale.RemainingDaysToCheckout ?? NOT_APPROVED_FLAG;
-                
-            //    if (remainingDays >= 15)
-            //    {
-            //        return parameter?.ToString() == "Foreground" ? DefaultForeground : SafeCheckoutBackground;
-            //    }
-            //    else if (remainingDays >= 10)
-            //    {
-            //        return parameter?.ToString() == "Foreground" ? DefaultForeground: WarningCheckoutBackground;
-            //    }
-            //    else
-            //    {
-            //        return parameter?.ToString() == "Foreground" ? DangerForeground: DangerBackground;
-            //    }
-            //}
-            else if (sale.DisplayType == "Venda")
+            return status switch
             {
-                TimeSpan diff = DateTime.Now - sale.DateCreated;
-                remainingDays = diff.Days;
+                "Em Orçamento" or "Em Aberto" => GetBrushForLateSales(remainingDays, isForeground),
+                "Faturado" => GetBrushForSaleStatus(remainingDays, isForeground),
+                _ => isForeground ? Colors.DefaultForeground : null
+            };
+        }
 
-                if (remainingDays <= 2)
-                {
-                    return parameter?.ToString() == "Foreground" ? DefaultForeground : SafeApprovedBackground;
-                }
-                else if (remainingDays <= 5)
-                {
-                    return parameter?.ToString() == "Foreground" ? DefaultForeground : WarningApprovedBackground;
-                }
-                else
-                {
-                    return parameter?.ToString() == "Foreground" ? DangerForeground : DangerBackground;
-                }
+        private static int CalculateRemainingDays(Sales sale, string status)
+        {
+            return status switch
+            {
+                "Aprovado" => SalesUtils.CalculateRemainingApprovedDays(sale.ApprovedAt) ?? NOT_APPROVED_FLAG,
+                "Em Orçamento" => SalesUtils.CalculateRemainingQuotationDays(sale.QuotationDate) ?? NOT_APPROVED_FLAG,
+                "Em Aberto" => SalesUtils.CalculateRemainingDaysToCheckout(sale.DateCreated) ?? NOT_APPROVED_FLAG,
+                "Faturado" => (DateTime.Now - sale.DateCreated).Days,
+                _ => NOT_APPROVED_FLAG
+            };
+        }
+
+        private static object GetBrushForApprovedStatus(int remainingDays, bool isForeground)
+        {
+            if (remainingDays >= 4)
+            {
+                return isForeground ? Colors.DefaultForeground : Colors.SafeBackground;
+            }
+            else if (remainingDays > 2)
+            {
+                return isForeground ? Colors.DefaultForeground : Colors.WarningBackground;
             }
             else
             {
-                return parameter?.ToString() == "Foreground" ? DefaultForeground : DefaultBackground;
+                return isForeground ? Colors.DangerForeground : Colors.DangerBackground;
             }
+        }
+
+        private static object GetBrushForSaleStatus(int remainingDays, bool isForeground)
+        {
+            if (remainingDays <= 7)
+            {
+                return isForeground ? Colors.SafeForeground : null;
+            }
+            else
+            {
+                return isForeground ? Colors.DangerForeground : Colors.DangerBackground;
+            }
+        }
+
+        private static object GetBrushForLateSales(int remainingDays, bool isForeground)
+        {
+            return remainingDays < 2
+                ? isForeground ? Colors.LateForeground : null
+                : isForeground ? Colors.SafeForeground : null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

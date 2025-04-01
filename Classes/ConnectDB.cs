@@ -8,35 +8,42 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.Extensions.Configuration;
 
 namespace NeuroApp.Classes
 {
     public class ConnectDB
     {
-        private readonly static string ServerName = "127.0.0.1";
-        private readonly static string Port = "5432";
-        private readonly static string UserName = "postgres";
-        private readonly static string Password = "Sivec@20";
-        private readonly static string DatabaseName = "NeuroApp";
+        private readonly string _connectionString;
 
-        public string ConnectionString { get; }
-
-        public ConnectDB()
+        public ConnectDB(IConfiguration configuration)
         {
-            ConnectionString = new NpgsqlConnectionStringBuilder
+            var serverName = configuration.GetValue<string>("Database:Server") ?? "127.0.0.1";
+            var port = configuration.GetValue<string>("Database:Port") ?? "5432";
+            var userName = configuration.GetValue<string>("Database:Username") ?? "postgres";
+            var password = configuration.GetValue<string>("Database:Password") ?? "Sivec@20";
+            var databaseName = configuration.GetValue<string>("Database:Name") ?? "NeuroApp";
+
+            _connectionString = new NpgsqlConnectionStringBuilder
             {
-                Host = ServerName,
-                Port = int.Parse(Port),
-                Username = UserName,
-                Password = Password,
-                Database = DatabaseName,
+                Host = serverName,
+                Port = int.Parse(port),
+                Username = userName,
+                Password = password,
+                Database = databaseName,
                 SslMode = SslMode.Disable,
             }.ConnectionString;
         }
+
+        public string ConnectionString => _connectionString;
     }
 
     public class DatabaseActions : ConnectDB
     {
+        public DatabaseActions(IConfiguration configuration) : base(configuration)
+        {
+        }
+
         public async Task<(bool IsAuthenticated, string UserRole)> UserLoginAsync(string username, string password)
         {
             try
@@ -79,44 +86,10 @@ namespace NeuroApp.Classes
             return Convert.ToBase64String(bytes);
         }
 
-        //public bool BuildOS(ServiceOrder serviceOrder)
-        //{
-        //    try
-        //    {
-        //        using NpgsqlConnection npgsqlConnection = new(ConnectionString);
-        //        npgsqlConnection.Open();
-
-        //        using var cmd = new NpgsqlCommand(
-        //            $"INSERT INTO ServiceOrder(customer,numeroos,arrivaldate,status,observation) VALUES (@cliente,@numeroOs,@dataChegada,@status,@observacao)",
-        //            npgsqlConnection
-        //        );
-
-        //        serviceOrder.Status_ = serviceOrder.IsGuarantee
-        //            ? NeuroApp.ServiceOrder.Status.budgetApproved
-        //            : NeuroApp.ServiceOrder.Status.waitingBudget;
-
-        //        cmd.Parameters.AddWithValue("cliente", serviceOrder.Customer);
-        //        cmd.Parameters.AddWithValue("numeroOs", serviceOrder.OsNumber);
-        //        cmd.Parameters.AddWithValue("dataChegada", serviceOrder.ArrivalDate ?? (object)DBNull.Value);
-        //        cmd.Parameters.AddWithValue("observacao", (object?)serviceOrder.Observation ?? DBNull.Value);
-        //        //cmd.Parameters.AddWithValue("garantia", NpgsqlTypes.NpgsqlDbType.Boolean).Value = serviceOrder.IsGuarantee;
-        //        cmd.Parameters.AddWithValue("status", (int)serviceOrder.Status_);
-
-        //        cmd.ExecuteNonQuery();
-
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Erro inesperado: {ex.Message}");
-        //        return false;
-        //    }
-        //}
-
         private string GetEnumJsonValue<T>(T enumValue) where T : Enum
         {
             var type = typeof(T);
-            var field = type.GetField(enumValue.ToString());
+            var field = type.GetField(enumValue.ToString());  
 
             if (field == null)
                 throw new ArgumentException($"O valor '{enumValue}' não é um membro válido do enum '{typeof(T).Name}'.", nameof(enumValue));
@@ -135,7 +108,7 @@ namespace NeuroApp.Classes
                 {
                     await connection.OpenAsync();
 
-                    var (currentStatus, currentApprovedAt, currentPriority) = await GetCurrentStatusAsync(connection, sale.Code);
+                    var (currentStatus, currentApprovedAt) = await GetCurrentStatusAsync(connection, sale.Code);
 
                     DateTime? approvedAt = currentApprovedAt ?? (sale.Status == Status.Aprovado ? DateTime.Now : null);
 
@@ -143,9 +116,7 @@ namespace NeuroApp.Classes
                         ? BusinessDayCalculator.CalculateDeadline(approvedAt.Value)
                         : null;
 
-                    int priority = CalculatePriority(sale.Status.ToString());
-
-                    await InsertOrUpdateServiceOrdersAsync(connection, sale, approvedAt, deadline, priority);
+                    await InsertOrUpdateServiceOrdersAsync(connection, sale, approvedAt, deadline);
 
                     foreach (var tag in sale.Tags)
                     {
@@ -182,10 +153,10 @@ namespace NeuroApp.Classes
             }
         }
 
-        private async Task<(string status, DateTime? approvedAt, int priority)> GetCurrentStatusAsync(NpgsqlConnection connection, string code)
+        private async Task<(string status, DateTime? approvedAt)> GetCurrentStatusAsync(NpgsqlConnection connection, string code)
         {
             const string selectQuery = @"
-                SELECT status, approvedat, priority
+                SELECT status, approvedat
                 FROM serviceorders
                 WHERE numos = @numeroOs";
 
@@ -197,19 +168,18 @@ namespace NeuroApp.Classes
             {
                 string status = GetValueOrDefault(reader["status"], "Unknown");
                 DateTime? approvedAt = reader["approvedat"] as DateTime?;
-                int priority = GetValueOrDefault(reader["priority"], 6);
 
-                return (status, approvedAt, priority);
+                return (status, approvedAt);
             }
 
-            return ("Unknown", null, 6);
+            return ("Unknown", null);
         }
 
-        private async Task InsertOrUpdateServiceOrdersAsync(NpgsqlConnection connection, Sales sale, DateTime? approvedAt, DateTime? deadline, int priority)
+        private async Task InsertOrUpdateServiceOrdersAsync(NpgsqlConnection connection, Sales sale, DateTime? approvedAt, DateTime? deadline)
         {
             string insertQuery = @"
-                INSERT INTO serviceorders (customer, numos, arrivaldate, ostype, observations, status, approvedat, deadline, priority, ismanual)
-                VALUES (@cliente, @numeroOs, @dataChegada, @ostype, @observacao, @status, @approvedAt, @deadline, @priority, @isManual)
+                INSERT INTO serviceorders (customer, numos, arrivaldate, ostype, observations, status, approvedat, deadline, ismanual)
+                VALUES (@cliente, @numeroOs, @dataChegada, @ostype, @observacao, @status, @approvedAt, @deadline, @isManual)
                 ON CONFLICT (numos) DO UPDATE
                 SET status = EXCLUDED.status,
                     approvedat = CASE
@@ -220,10 +190,7 @@ namespace NeuroApp.Classes
                         WHEN serviceorders.status != 'Aprovado' AND EXCLUDED.status = 'Aprovado' THEN EXCLUDED.deadline
                         ELSE serviceorders.deadline
                     END,
-                    priority = CASE
-                        WHEN serviceorders.ismanual = true THEN serviceorders.priority
-                        ELSE EXCLUDED.priority
-                    END;";
+                    ismanual = EXCLUDED.ismanual;";
 
             using (var insertCommand = new NpgsqlCommand(insertQuery, connection))
             {
@@ -237,7 +204,6 @@ namespace NeuroApp.Classes
                     new NpgsqlParameter("status", sale.Status.ToString()),
                     new NpgsqlParameter("approvedAt", approvedAt ?? (object)DBNull.Value),
                     new NpgsqlParameter("deadline", deadline ?? (object)DBNull.Value),
-                    new NpgsqlParameter("priority", priority),
                     new NpgsqlParameter("isManual", sale.IsManual)
                 });
 
@@ -263,29 +229,7 @@ namespace NeuroApp.Classes
                               FROM serviceorders
                               WHERE 
                                    status != 'Faturado'
-                                   OR (status = 'Faturado' AND ostype = 'Venda' AND arrivaldate >= NOW() - INTERVAL '7 days')
-                              ORDER BY
-                                    CASE
-                                        WHEN ismanual = true THEN priority
-                                        ELSE
-                                            CASE 
-                                                WHEN ostype = 'Venda' THEN 1 -- Adicionando regra para 'Faturado' e 'Venda' ter prioridade 1
-                                                WHEN status IN ('Emexecução', 'ControledeQualidade', 'ReprovadoQualidade', 'AprovadoQualidade', 'EsperandoColeta') THEN 0
-                                                WHEN status = 'Aprovado' THEN 1
-                                                WHEN status = 'Emorçamento' THEN 2
-                                                WHEN status = 'Emaberto' THEN 4
-                                                WHEN status = 'Faturado' THEN 5
-                                                ELSE 6 
-                                            END
-                                    END,
-                                    CASE 
-                                        WHEN status IN ('Emexecução', 'Controledequalidade', 'ReprovadoQualidade', 'AprovadoQualidade', 'EsperandoColeta') THEN approvedat
-                                        WHEN status = 'Aprovado' THEN approvedat
-                                        WHEN status = 'Emorçamento' THEN arrivaldate
-                                        WHEN status = 'Pausada' THEN pauseddate
-                                        WHEN status = 'Emaberto' THEN COALESCE(arrivaldate, '1970-01-01')
-                                        ELSE NULL
-                                    END;";
+                                   OR (status = 'Faturado' AND ostype = 'Venda' );";
 
                 using var command = new NpgsqlCommand(query, connection);
                 using var reader = await command.ExecuteReaderAsync();
@@ -304,7 +248,7 @@ namespace NeuroApp.Classes
             return sales;
         }
 
-        private int CalculatePriority(string status)
+        public int CalculatePriority(string status)
         {
             return status switch
             {
@@ -325,8 +269,7 @@ namespace NeuroApp.Classes
 
         public async Task AddObservationsAsync(string obsText, string numeroOs)
         {
-            var db = new ConnectDB();
-            await using var npgsqlConnection = new NpgsqlConnection(db.ConnectionString);
+            await using var npgsqlConnection = new NpgsqlConnection(ConnectionString);
 
             try
             {
@@ -430,7 +373,6 @@ namespace NeuroApp.Classes
                 DisplayStatus = MapToSaleStatus(GetValueOrDefault(reader["status"], "Unknown")),
                 IsPaused = reader["pausedDate"] != DBNull.Value,
                 IsManual = GetNulableBool(reader["ismanual"]) ?? false,
-                Priority = CalculatePriority(GetValueOrDefault(reader["status"], "Unknown")),
                 ApprovedAt = GetNullableDateTime(reader["approvedat"]),
                 QuotationDate = GetNullableDateTime(reader["quotationdate_fallback"]),
                 Excluded = reader["excluded"] != DBNull.Value && (bool)reader["excluded"]
@@ -545,7 +487,7 @@ namespace NeuroApp.Classes
             }
         }
 
-        public async Task<bool> PauseOsAsync(string osCode, Status status)
+        public async Task<bool> PauseOsAsync(string osCode, Status status, string type)
         {
             try
             {
@@ -557,7 +499,6 @@ namespace NeuroApp.Classes
                     SET pausedDate = @pausedDate
                     WHERE numos = @OsCode
                     AND pausedDate IS NULL 
-                    AND (approvedat IS NOT NULL OR deadline IS NOT NULL)
                     RETURNING pausedDate";
 
                 using var command = new NpgsqlCommand(pauseQuery, connection);
@@ -566,7 +507,7 @@ namespace NeuroApp.Classes
 
                 var result = await command.ExecuteScalarAsync();
 
-                if (status.ToString() == "Aprovado"|| Sales.IsLocalStatus(status.ToString()))
+                if (status.ToString() == "Aprovado" || SalesUtils.IsLocalStatus(status.ToString()) || type == "Venda")
                 {
                     if (result != null)
                     {
@@ -591,11 +532,17 @@ namespace NeuroApp.Classes
             }
         }
 
+        private DateTime CalculateNewDeadline(DateTime? deadline, DateTime pausedDate)
+        {
+            int diasPausados = BusinessDayCalculator.CalculateBusinessDays(pausedDate, DateTime.Now);
+            return (deadline ?? DateTime.Now).AddDays(diasPausados);
+        }
+
         public async Task<bool> UnpauseOsAsync(string osCode)
         {
             try
             {
-                  using var connection = new NpgsqlConnection(ConnectionString);
+                using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
                 string selectQuery = "SELECT pausedDate, deadline, status FROM serviceorders WHERE numos = @OsCode";
@@ -603,7 +550,7 @@ namespace NeuroApp.Classes
 
                 DateTime? pausedDate = null;
                 DateTime? deadline = null;
-                string status = null;
+                string? status = null;
 
                 using (var selectCommand = new NpgsqlCommand(selectQuery, connection))
                 {
@@ -623,9 +570,9 @@ namespace NeuroApp.Classes
 
                 bool isLocal = localStatuses.Any(s => s.Replace(" ", "").ToLower() == normalizedStatus);
 
-                if (pausedDate.HasValue && isLocal)
+                if (pausedDate.HasValue)
                 {
-                    if (!(pausedDate.Value == DateTime.UtcNow))
+                    if (!(pausedDate.Value == DateTime.Now))
                     {
                         using var updateCommand = new NpgsqlCommand("UPDATE serviceorders SET pausedDate = NULL WHERE numos = @OsCode", connection);
                         updateCommand.Parameters.AddWithValue("@OsCode", osCode);
@@ -634,23 +581,22 @@ namespace NeuroApp.Classes
                         MessageBox.Show($"Os {osCode} reativada sem alteração no prazo.", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
                         return true;
                     }
+                    else
+                    {
+                        DateTime newDeadline = CalculateNewDeadline(deadline, pausedDate.Value);
 
-                    int diasPausados = BusinessDayCalculator.CalculateBusinessDays(pausedDate.Value, DateTime.UtcNow);
+                        using var updateCommandFinal = new NpgsqlCommand(updateQuery, connection);
+                        updateCommandFinal.Parameters.AddWithValue("@newDeadline", newDeadline);
+                        updateCommandFinal.Parameters.AddWithValue("@OsCode", osCode);
+                        await updateCommandFinal.ExecuteNonQueryAsync();
 
-                    DateTime newDeadline = (deadline ?? DateTime.UtcNow).AddDays(diasPausados);
-
-
-                    using var updateCommandFinal = new NpgsqlCommand(updateQuery, connection);
-                    updateCommandFinal.Parameters.AddWithValue("@newDeadline", newDeadline);
-                    updateCommandFinal.Parameters.AddWithValue("@OsCode", osCode);
-                    await updateCommandFinal.ExecuteNonQueryAsync();
-
-                    MessageBox.Show($"OS {osCode} reativada. Novo prazo: {newDeadline}", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return true;
+                        MessageBox.Show($"OS {osCode} reativada. Novo prazo: {newDeadline}", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return true;
+                    }
                 }
                 else
                 {
-                    MessageBox.Show($"A OS {osCode} não pode ser reativada. Verifique o status e a data de pausa.");
+                    MessageBox.Show($"A OS {osCode} não pode ser reativada. Verifique o status e a data de pausa.", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
                     return false;
                 }
             }
@@ -662,7 +608,7 @@ namespace NeuroApp.Classes
         }
 
 
-        public async Task<bool> UpdatePriorityAsync(string osCode, int priority, bool isManual)
+        public async Task<bool> UpdatePriorityAsync(string osCode, bool isManual)
         {
             try
             {
@@ -671,14 +617,12 @@ namespace NeuroApp.Classes
 
                 string updateQuery = @"
                     UPDATE serviceorders
-                    SET priority = @priority,
-                        ismanual = COALESCE(ismanual, @isManual)
-                    WHERE numos = @oscode";
+                    SET ismanual = @isManual
+                    WHERE numos = @osCode AND ismanual <> @isManual";
 
                 using var updateCommand = new NpgsqlCommand(updateQuery, connection);
-                updateCommand.Parameters.AddWithValue("priority", priority);
-                updateCommand.Parameters.AddWithValue("oscode", osCode);
-                updateCommand.Parameters.AddWithValue("ismanual", isManual);
+                updateCommand.Parameters.AddWithValue("isManual", isManual);
+                updateCommand.Parameters.AddWithValue("osCode", osCode);
 
                 int rowsAffected = await updateCommand.ExecuteNonQueryAsync();
 
@@ -713,7 +657,5 @@ namespace NeuroApp.Classes
                 return false;
             }
         }
-
-
     }
 }

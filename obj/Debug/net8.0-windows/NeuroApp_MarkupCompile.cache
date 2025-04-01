@@ -1,20 +1,20 @@
 ﻿NeuroApp
+1.0.0.0
 
-
-exe
+winexe
 C#
 .cs
-C:\Users\supor\Source\Repos\Support-Neuro\obj\Debug\net8.0-windows\
+c:\Users\supor\source\repos\Support-Neuro\obj\Debug\net8.0-windows\
 NeuroApp
 none
 false
-TRACE;DEBUG;NET;NET8_0;NETCOREAPP
-C:\Users\supor\Source\Repos\Support-Neuro\App.xaml
-8891303974
+TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
+c:\Users\supor\source\repos\Support-Neuro\App.xaml
+111698783029
 3-720092851
-28411730653
-221-1984524683
-LoginScreen.xaml;MainWindow.xaml;Screens\ClientPage.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\Finances.xaml;Screens\HomeScreen.xaml;Screens\ServiceOrders.xaml;
+56-1453775856
+2281777982392
+Views\ClientPage.xaml;Views\Cockpit.xaml;Views\Customers.xaml;Views\HomeScreen.xaml;Views\LoginScreen.xaml;Views\MainWindow.xaml;Views\SupportGuideDialog.xaml;Views\SupportGuideScreen.xaml;Views\SupportStaticGuideDialog.xaml;Views\WarrantyDetailsDialog.xaml;Views\WarrantyScreen.xaml;
 
-False
+True
 

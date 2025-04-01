@@ -1,0 +1,7 @@
+2025-03-10 16:57:42.552 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-03-10 16:57:42.852 -03:00 [INF] Serviços configurados com sucesso
+2025-03-10 16:57:43.930 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-03-10 16:57:43.931 -03:00 [INF] MainViewModel inicializado
+2025-03-10 16:57:43.932 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-10 16:57:45.380 -03:00 [INF] Janela de login exibida
+2025-03-10 16:58:14.451 -03:00 [INF] Encerrando aplicação NeuroApp

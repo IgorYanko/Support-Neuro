@@ -1,16 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Windows.Media;
 
 namespace NeuroApp.Classes
 {
+    public static class SalesUtils
+    {
+        private static readonly HashSet<string> LocalStatuses = new()
+        {
+            "Em Execução",
+            "Controle de Qualidade",
+            "Aprovado na Qualidade",
+            "Reprovado na Qualidade",
+            "Esperando Coleta"
+        };
+
+        public static bool IsLocalStatus(string status) => LocalStatuses.Contains(status);
+        
+        public static bool IsStatusEditable(string status) => LocalStatuses.Contains(status) || status == "Aprovado";
+
+        public static int? CalculateRemainingApprovedDays(DateTime? approvedAt)
+        {
+            if (!approvedAt.HasValue) return null;
+
+            DateTime finalDate = BusinessDayCalculator.CalculateDeadline(approvedAt.Value);
+            return DateTime.Now > finalDate ? -1 : BusinessDayCalculator.CalculateBusinessDays(DateTime.Now, finalDate);
+        }
+
+        public static int? CalculateRemainingDaysToCheckout(DateTime arrivalDate)
+        {
+            DateTime finalDate = BusinessDayCalculator.CalculateExpirationDate(arrivalDate);
+            return DateTime.Now > finalDate ? -1 : BusinessDayCalculator.CalculateBusinessDays(DateTime.Now, finalDate);
+        }
+
+        public static int? CalculateRemainingQuotationDays(DateTime? quotationDate)
+        {
+            if (!quotationDate.HasValue) return null;
+
+            DateTime finalDate = BusinessDayCalculator.CalculateQuotationExpirationDate(quotationDate.Value);
+            return DateTime.Now > finalDate ? -1 : BusinessDayCalculator.CalculateBusinessDays(DateTime.Now, finalDate);
+        }
+    }
+
     public enum SaleType
     {
         [JsonPropertyName("Venda")]
@@ -92,10 +124,6 @@ namespace NeuroApp.Classes
 
     public class Sales
     {
-        private const int BUSINESS_DAYS_LIMIT = 7;
-        private const int WAITING_DAYS_LIMIT = 20;
-        private const int NOT_APPROVED_FLAG = -999;
-
         [JsonPropertyName("_id")]
         public string Id {  get; set; }
 
@@ -138,30 +166,6 @@ namespace NeuroApp.Classes
             }
         }
 
-        public bool IsStatusEditable => new HashSet<string>
-        {
-            "Aprovado",
-            "Em Execução",
-            "Controle de Qualidade",
-            "Aprovado na Qualidade",
-            "Reprovado na Qualidade",
-            "Esperando Coleta"
-        }.Contains(Status.ToString());
-
-        public static bool IsLocalStatus(string status)
-        {
-            var localStatuses = new HashSet<string>
-            {
-                "Em Execução",
-                "Controle de Qualidade",
-                "Aprovado na Qualidade",
-                "Reprovado na Qualidade",
-                "Esperando Coleta"
-            };
-
-            return localStatuses.Contains(status);
-        }
-
         public List<string> StatusList { get; } = GetStatusToComboBox.GetStatusToComboBoxList<Status>().GetRange(7, 5);
 
         [JsonPropertyName("tags")]
@@ -200,92 +204,15 @@ namespace NeuroApp.Classes
 
         public bool Excluded {  get; set; }
 
-
-        /// <summary>
-        /// Dias restantes de pedidos aprovados
-        /// </summary>
         public DateTime? ApprovedAt { get; set; }
         
         public DateTime? Deadline { get; set; }
 
-        public int? RemainingBusinessDays
-        {
-            get
-            {
-                if (!ApprovedAt.HasValue) return NOT_APPROVED_FLAG;
-
-                DateTime finalDate = BusinessDayCalculator.CalculateDeadline(ApprovedAt.Value);
-                return BusinessDayCalculator.CalculateBusinessDays(DateTime.Now, finalDate);
-            }
-        }
-
-        public DateTime? CheckoutDate
-        {
-            get
-            {
-                if (ApprovedAt.HasValue || Status == Status.Aprovado) return null;
-
-                return BusinessDayCalculator.CalculateExpirationDate(DateCreated);
-            }
-        }
-
-        public int? RemainingDaysToCheckout
-        {
-            get
-            {
-                if (CheckoutDate.HasValue)
-                {
-                    if (DateTime.Now > CheckoutDate)
-                    {
-                        return -1;
-                    }
-                    else
-                    {
-                        TimeSpan diff = CheckoutDate.Value - DateTime.Now;
-                        return diff.Days;
-                    }
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
+        public DateTime? CheckoutDate { get; set; }
 
         public DateTime? QuotationDate { get; set; }
 
-        public DateTime? MaxApprovationDate 
-        { 
-            get
-            {
-                return QuotationDate.HasValue
-                    ? BusinessDayCalculator.CalculateQuotationExpirationDate(QuotationDate.Value)
-                    : null;
-            }
-        }
-
-        public int? RemainingQuotationDays
-        {
-            get
-            {
-                if (QuotationDate.HasValue)
-                {
-                    if (DateTime.Now > MaxApprovationDate)
-                    {
-                        return -1;
-                    }
-                    else
-                    {
-                        TimeSpan diff = MaxApprovationDate.Value - DateTime.Now;
-                        return diff.Days;
-                    }
-                }
-                else 
-                { 
-                    return null; 
-                }
-            }
-        }
+        public DateTime? QuotationExpirationDate { get; set; }
     }
 
     public class Tag

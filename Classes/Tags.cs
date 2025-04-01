@@ -43,7 +43,7 @@ namespace NeuroApp.Classes
                 { "66f1621642e2594cd72206aa", new CustomTag("66f1621642e2594cd72206aa", "#A84CE6", "#FFFFFF", "Realizar") }, //Realizar
                 { "66f56c28dbe9ae1bca04da01", new CustomTag("66f56c28dbe9ae1bca04da01", "#DDBF27", "#353535", "Orçamento Realizado") }, //Orçamento Realizado
                 { "66f56c659d3ccc33809c7ac1", new CustomTag("66f56c659d3ccc33809c7ac1", "#1DC320", "#FFFFFF", "Orçamento Aprovado") },  //Orçamento Aprovado
-
+                  
                 { "65538e7da2f772013a7f4a69", new CustomTag("65538e7da2f772013a7f4a69", "#2464CC", "#FFFFFF", "Em execução") }, //Em Execução - Ordem de Serviço
                 { "66f438f5bae5d3cdfc5c029e", new CustomTag("66f438f5bae5d3cdfc5c029e", "#F90B0", "#FFFFFF", "Cortesia/Parceria") }, //Cortesia/Parceria
                 { "66f5922c647f50302398bd9d", new CustomTag("66f5922c647f50302398bd9d", "#F6AB09", "#353535", "Orçamento Aprovado") }, //Orçamento Aprovado - Ordem de Serviço
@@ -51,7 +51,8 @@ namespace NeuroApp.Classes
                 { "66f6a6d16197be8762af078f", new CustomTag("66f6a6d16197be8762af078f", "#F9A615", "#353535", "Orçamento Finalizado") }, //Orçamento Finalizado
                 { "6798d4c54f7bc4c825d878f7", new CustomTag("6798d4c54f7bc4c825d878f7", "#19E6E2", "#353535", "Controle de Qualidade") }, //Controle de Qualidade
                 { "67a604e090f61408b2242f8d", new CustomTag("67a604e090f61408b2242f8d", "#121111", "#FFFFFF", "Orçamento Reprovado") }, //Orçamento Reprovado
-                { "67a9e528b4b5e6dff68ec07e", new CustomTag("67a9e528b4b5e6dff68ec07e", "#4C2A2A", "#FFFFFF", "Aguardando matéria-prima") } //Aguardando matéria-prima
+                { "67a9e528b4b5e6dff68ec07e", new CustomTag("67a9e528b4b5e6dff68ec07e", "#4C2A2A", "#FFFFFF", "Aguardando matéria-prima") }, //Aguardando matéria-prima
+                //{ "66f56c28dbe9ae1bca04da01", new CustomTag("66f56c28dbe9ae1bca04da01", "#DDBF27", "#353535", "Orçamento realizado") }, //Orçamento aprovado
             };
         }
 

@@ -10,11 +10,11 @@ none
 false
 TRACE;RELEASE;NET;NET8_0;NETCOREAPP
 C:\Users\supor\Source\Repos\Support-Neuro\App.xaml
-61523035077
-11133096477
-26783726858
-221-1984524683
-LoginScreen.xaml;MainWindow.xaml;Screens\ClientPage.xaml;Screens\Cockpit.xaml;Screens\Customers.xaml;Screens\HomeScreen.xaml;
+111698783029
+
+471469487186
+225-1392225477
+Views\ClientPage.xaml;Views\Cockpit.xaml;Views\Customers.xaml;Views\HomeScreen.xaml;Views\LoginScreen.xaml;Views\MainWindow.xaml;Views\SupportGuideDialog.xaml;Views\SupportGuideScreen.xaml;Views\SupportStaticGuideDialog.xaml;Views\WarrantyDetailsDialog.xaml;Views\WarrantyScreen.xaml;
 
 False
 

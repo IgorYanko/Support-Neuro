@@ -14,15 +14,15 @@ namespace NeuroApp.Classes
 
             var holidays = new HashSet<DateTime>
             {
-                new DateTime(year, 1, 1),
-                new DateTime(year, 4, 21),
-                new DateTime(year, 5, 1),
-                new DateTime(year, 9, 7),
-                new DateTime(year, 10, 12),
-                new DateTime(year, 11, 2),
-                new DateTime(year, 11, 15),
-                new DateTime(year, 11, 20),
-                new DateTime(year, 12, 25)
+                new (year, 1, 1),
+                new (year, 4, 21),
+                new (year, 5, 1),
+                new (year, 9, 7),
+                new (year, 10, 12),
+                new (year, 11, 2),
+                new (year, 11, 15),
+                new (year, 11, 20),
+                new (year, 12, 25)
             };
 
             DateTime easter = CalculateEasterSunday(year);
@@ -80,7 +80,7 @@ namespace NeuroApp.Classes
             return businessDays;
         }
 
-        public static DateTime AddBusinessDays(DateTime startDate, int businessDaysToAdd)
+        private static DateTime AddBusinessDays(DateTime startDate, int businessDaysToAdd)
         {
             DateTime currentDate = startDate;
             int addedDays = 0;

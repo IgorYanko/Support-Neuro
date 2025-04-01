@@ -10,25 +10,28 @@ namespace NeuroApp.Api
     {
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
-        private readonly string _token;
+        private readonly string? _token;
 
         public SensioApiService(IConfiguration configuration)
         {
             _token = configuration.GetValue<string>("ApiSettings:SensioApiKey");
-            _baseUrl = configuration.GetValue<string>("ApiSettings:BaseUrl");
-
-            if (string.IsNullOrEmpty(_baseUrl))
-            {
-                throw new ArgumentNullException(nameof(_baseUrl), "Base URL não configurado ou está vazio.");
-            }
+            _baseUrl = configuration.GetValue<string>("ApiSettings:BaseUrl") ?? 
+                throw new ArgumentNullException(nameof(configuration), "Base URL não configurado ou está vazio.");
 
             var handler = new HttpClientHandler
             {
                 AllowAutoRedirect = false
             };
 
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            _httpClient = new HttpClient(handler);
+            if (!string.IsNullOrEmpty(_token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(configuration), "Token de API não configurado ou está vazio.");
+            }
         }
 
         public async Task<string> GetDataAsync(string endpoint)
@@ -41,7 +44,7 @@ namespace NeuroApp.Api
 
                 if (response.IsSuccessStatusCode)
                 {
-                    string contentType = response.Content.Headers.ContentType?.MediaType;
+                    string? contentType = response.Content.Headers.ContentType?.MediaType;
                     
                     if (contentType != null && contentType.Contains("application/json"))
                     {
@@ -51,9 +54,8 @@ namespace NeuroApp.Api
                     else
                     {
                         string htmlContent = await response.Content.ReadAsStringAsync();
-                        Console.WriteLine($"Resposta não é JSON: {htmlContent}");
 
-                        throw new Exception($"Resposta da API não é JSON. Conteúdo recebido: {htmlContent.Substring(0, 500)}");
+                        throw new Exception($"Resposta da API não é JSON. Conteúdo recebido: {htmlContent[..500]}");
                     }
                 }
                 else
@@ -63,8 +65,7 @@ namespace NeuroApp.Api
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao obter dados: {ex.Message}");
-                throw;
+                throw new Exception($"Erro ao acessar a API: {ex.Message}");
             }
         }
     }

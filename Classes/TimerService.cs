@@ -7,18 +7,20 @@ public class TimerService
 {
     private readonly Func<Task> _action;
     private readonly TimeSpan _interval;
-    private Timer _timer;
+    private Timer? _timer;
     private bool _isRunning;
     private bool _isActive;
     private readonly Dispatcher _dispatcher;
 
-    public event EventHandler<Exception> OnError;
+    public event EventHandler<Exception>? OnError;
 
     public TimerService(Func<Task> action, TimeSpan interval, Dispatcher dispatcher)
     {
         _action = action ?? throw new ArgumentNullException(nameof(action));
         _interval = interval;
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _timer = null;
+        OnError = null;
     }
 
     public void Start()

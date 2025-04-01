@@ -1,0 +1,41 @@
+2025-03-11 08:17:00.710 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-03-11 08:17:01.288 -03:00 [INF] Serviços configurados com sucesso
+2025-03-11 08:17:02.491 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-03-11 08:17:02.492 -03:00 [INF] MainViewModel inicializado
+2025-03-11 08:17:02.493 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 08:17:03.476 -03:00 [INF] Janela de login exibida
+2025-03-11 09:29:58.827 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-03-11 09:51:36.836 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-03-11 09:51:37.312 -03:00 [INF] Serviços configurados com sucesso
+2025-03-11 09:51:38.665 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-03-11 09:51:38.666 -03:00 [INF] MainViewModel inicializado
+2025-03-11 09:51:38.666 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 09:51:40.671 -03:00 [INF] Janela de login exibida
+2025-03-11 10:11:57.221 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-03-11 10:12:19.005 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-03-11 10:12:19.264 -03:00 [INF] Serviços configurados com sucesso
+2025-03-11 10:12:20.080 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-03-11 10:12:20.081 -03:00 [INF] MainViewModel inicializado
+2025-03-11 10:12:20.081 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 10:12:21.907 -03:00 [INF] Janela de login exibida
+2025-03-11 10:16:42.918 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 10:16:45.288 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 10:16:48.432 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 10:17:36.320 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 10:17:45.606 -03:00 [INF] WarrantyManager sendo inicializado
+2025-03-11 10:17:45.607 -03:00 [INF] String de conexão: Host=localhost;Database=NeuroApp;Username=postgres;Password=Sivec@20
+2025-03-11 10:17:49.856 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 10:22:12.294 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 10:22:28.701 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 10:22:30.025 -03:00 [INF] WarrantyManager sendo inicializado
+2025-03-11 10:22:30.026 -03:00 [INF] String de conexão: Host=localhost;Database=NeuroApp;Username=postgres;Password=Sivec@20
+2025-03-11 10:22:33.992 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 10:26:49.715 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 14:20:29.719 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-03-11 15:08:18.386 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-03-11 15:08:18.489 -03:00 [INF] Serviços configurados com sucesso
+2025-03-11 15:08:19.075 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-03-11 15:08:19.075 -03:00 [INF] MainViewModel inicializado
+2025-03-11 15:08:19.076 -03:00 [DBG] Navegando para a HomeScreen
+2025-03-11 15:08:21.376 -03:00 [INF] Janela de login exibida
+2025-03-11 17:01:10.443 -03:00 [INF] Encerrando aplicação NeuroApp
