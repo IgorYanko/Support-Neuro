@@ -4,7 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
+using Microsoft.VisualBasic;
 using NeuroApp.Classes;
 using NeuroApp.Interfaces;
 
@@ -14,7 +16,8 @@ namespace NeuroApp
     {
         private readonly IConfiguration _configuration;
         private readonly IMainViewModel _mainViewModel;
-        private readonly WarrantyManager _warrantyManager;
+        private readonly DispatcherTimer _searchTimer;
+        private DatabaseActions _actions;
         public ObservableCollection<Warranty> Warranties { get; set; }
         private bool _isLoading = false;
 
@@ -23,26 +26,36 @@ namespace NeuroApp
             InitializeComponent();
             _configuration = configuration;
             _mainViewModel = mainViewModel;
-            _warrantyManager = new WarrantyManager(_configuration);
+            _actions = new DatabaseActions(_configuration);
             Warranties = new ObservableCollection<Warranty>();
             DataContext = this;
             LoadWarrantiesAsync();
+
+            _searchTimer = new DispatcherTimer()
+            {
+                Interval = TimeSpan.FromMilliseconds(500)
+            };
+            _searchTimer.Tick += DebouncerTimer_Tick;
         }
+
+        private ObservableCollection<Warranty> oldWarranties = new ObservableCollection<Warranty>();
 
         private async void LoadWarrantiesAsync()
         {
             try
             {
                 ShowLoading(true);
-                var warranties = await _warrantyManager.GetAllWarrantiesAsync();
+                var warranties = await _actions.GetAllWarrantiesAsync();
                 
+                oldWarranties.Clear();
                 foreach (var warranty in warranties)
                 {
                     warranty.WarrantyEndDate = warranty.ServiceDate.AddMonths(warranty.WarrantyMonths);
+                    oldWarranties.Add(warranty);
                 }
 
                 Warranties.Clear();
-                foreach (var warranty in warranties)
+                foreach (var warranty in oldWarranties)
                 {
                     Warranties.Add(warranty);
                 }
@@ -87,11 +100,17 @@ namespace NeuroApp
 
         private void ShowWarrantyDetailsDialog(Warranty warranty)
         {
-            var dialog = new WarrantyDetailsDialog(warranty, _warrantyManager);
-            if (dialog.ShowDialog() == true)
+            var dialog = new WarrantyDetailsDialog(warranty, _configuration);
+
+            dialog.OnClosedNotification += () =>
             {
-                LoadWarrantiesAsync();
-            }
+                Dispatcher.Invoke(() =>
+                {
+                    LoadWarrantiesAsync();
+                });
+            };
+
+            dialog.ShowDialog();
         }
 
         private void NewWarrantyButton_Click(object sender, RoutedEventArgs e)
@@ -115,18 +134,28 @@ namespace NeuroApp
 
                 if (parameter == warranty.OsCode)
                 {
-                    _warrantyManager.DeleteWarrantyByOsCodeAsync(parameter);
+                    _actions.DeleteWarrantyByOsCodeAsync(parameter);
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        LoadWarrantiesAsync();
+                    });
                 }
                 else if (parameter == warranty.SerialNumber)
                 {
-                    _warrantyManager.DeleteWarrantyAsync(parameter);
+                    _actions.DeleteWarrantyAsync(parameter);
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        LoadWarrantiesAsync();
+                    });
                 }
 
                 LoadWarrantiesAsync();
             }
             else
             {
-                MessageBox.Show("Nenhuma garantia selecionada.");
+                MessageBox.Show("Nenhuma garantia selecionada");
             }
         }
         
@@ -136,6 +165,32 @@ namespace NeuroApp
             {
                 ShowWarrantyDetailsDialog(selectedWarranty);
             }
+        }
+
+        private async void DebouncerTimer_Tick(object sender, EventArgs e)
+        {
+            _searchTimer.Stop();
+            string searchText = SearchBar.Text.Trim();
+
+            if (string.IsNullOrEmpty(searchText))
+            {
+                Dispatcher.Invoke(() => WarrantyDataGrid.ItemsSource = oldWarranties);
+            }
+            else if (searchText.Length >= 2)
+            {
+                var results = await _actions.GetWarrantyBySearchAsync(searchText);
+                Dispatcher.Invoke(() => WarrantyDataGrid.ItemsSource = results);
+            }
+            else
+            {
+                Dispatcher.Invoke(() => WarrantyDataGrid.ItemsSource = null);
+            }
+        }
+
+        private async void SearchBar_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _searchTimer.Stop();
+            _searchTimer.Start();
         }
     }
 } 

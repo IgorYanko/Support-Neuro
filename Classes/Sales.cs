@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.Json.Serialization;
 
@@ -122,7 +123,7 @@ namespace NeuroApp.Classes
         Denegada
     }
 
-    public class Sales
+    public class Sales : INotifyPropertyChanged
     {
         [JsonPropertyName("_id")]
         public string Id {  get; set; }
@@ -151,17 +152,17 @@ namespace NeuroApp.Classes
         [JsonConverter(typeof(CustomEnumConverter<Status>))]
         public Status Status { get; set; }
 
-        public string _displayStatus {  get; set; }
+        public string _displayStatus;
         public string DisplayStatus
         {
             get => _displayStatus;
             set
             {
-                _displayStatus = value?.Trim() ?? string.Empty;
-
-                if (Enum.TryParse(_displayStatus, true, out Status parsedStatus))
+                if (_displayStatus != value)
                 {
-                    Status = parsedStatus;
+                    _displayStatus = value;
+                    OnPropertyChanged(nameof(Status));
+                    OnPropertyChanged(nameof(DisplayStatus));
                 }
             }
         }
@@ -213,6 +214,12 @@ namespace NeuroApp.Classes
         public DateTime? QuotationDate { get; set; }
 
         public DateTime? QuotationExpirationDate { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 
     public class Tag

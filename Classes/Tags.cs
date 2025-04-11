@@ -52,6 +52,8 @@ namespace NeuroApp.Classes
                 { "6798d4c54f7bc4c825d878f7", new CustomTag("6798d4c54f7bc4c825d878f7", "#19E6E2", "#353535", "Controle de Qualidade") }, //Controle de Qualidade
                 { "67a604e090f61408b2242f8d", new CustomTag("67a604e090f61408b2242f8d", "#121111", "#FFFFFF", "Orçamento Reprovado") }, //Orçamento Reprovado
                 { "67a9e528b4b5e6dff68ec07e", new CustomTag("67a9e528b4b5e6dff68ec07e", "#4C2A2A", "#FFFFFF", "Aguardando matéria-prima") }, //Aguardando matéria-prima
+                { "67dd7065a853d4325710c96e", new CustomTag("67dd7065a853d4325710c96e", "#EAA510", "#353535", "Orçamento realizado") },
+                { "67f801b9db8957c2007e624f", new CustomTag("67f801b9db8957c2007e624f", "#080707", "#FFFFFF", "Upgrade OTO") }
                 //{ "66f56c28dbe9ae1bca04da01", new CustomTag("66f56c28dbe9ae1bca04da01", "#DDBF27", "#353535", "Orçamento realizado") }, //Orçamento aprovado
             };
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using Microsoft.Extensions.Configuration;
 using NeuroApp.Classes;
 
 namespace NeuroApp
@@ -7,13 +8,15 @@ namespace NeuroApp
     public partial class WarrantyDetailsDialog : Window
     {
         private Warranty _warranty;
-        private readonly WarrantyManager _warrantyManager;
+        private DatabaseActions _actions;
 
-        public WarrantyDetailsDialog(Warranty warranty, WarrantyManager warrantyManager)
+        public event Action OnClosedNotification;
+
+        public WarrantyDetailsDialog(Warranty warranty, IConfiguration configuration)
         {
             InitializeComponent();
             _warranty = warranty;
-            _warrantyManager = warrantyManager;
+            _actions = new(configuration);
 
             ClientNameTextBox.Text = _warranty.ClientName;
             SerialNumberTextBox.Text = _warranty.SerialNumber;
@@ -31,6 +34,7 @@ namespace NeuroApp
             }
 
             WarrantyMonthsTextBox.Text = _warranty.WarrantyMonths.ToString();
+            this.Closed += (sender, e) => OnClosedNotification?.Invoke();
         }
 
         private void WarrantyTypeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -78,15 +82,15 @@ namespace NeuroApp
                     _warranty.WarrantyMonths = warrantyMonths;
                     _warranty.Observation = observation;
 
-                    if (_warranty.Id == null)
+                    if (_warranty.Id == 0)
                     {
-                        await _warrantyManager.SaveWarrantyAsync(_warranty);
+                        await _actions.SaveWarrantyAsync(_warranty);
                         MessageBox.Show("Garantia salva com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
                         Close();
                     }
                     else
                     {
-                        await _warrantyManager.UpdateWarrantyAsync(_warranty);
+                        await _actions.UpdateWarrantyAsync(_warranty);
                         MessageBox.Show("Garantia salva com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
                         Close();
                     }

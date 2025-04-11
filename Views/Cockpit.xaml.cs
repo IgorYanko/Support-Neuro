@@ -65,7 +65,6 @@ namespace NeuroApp
                     if (cachedSale == null && apiSale.Status.ToString() != "Faturado" && !apiSale.Excluded)
                     {
                         await database.VerifyAndSave(apiSale);
-                        apiSale.Tags = await database.GetTagsForOsAsync(apiSale.Code);
                         _cachedSalesData.Add(apiSale);
                     }
                     else if (cachedSale == null && apiSale.Status.ToString() == "Faturado")
@@ -76,7 +75,7 @@ namespace NeuroApp
                     {
                         cachedSale.Status = apiSale.Status;
                         cachedSale.IsStatusModified = false;
-                        await database.VerifyAndSave(cachedSale);
+                        await database.VerifyAndSave(apiSale);
                     }
                 }
 
@@ -264,23 +263,23 @@ namespace NeuroApp
 
         private void DataGridSales_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
         {
-            if (e.Column.Header?.ToString() == "Status")
+            if (e.Column.Header?.ToString() == "Status" && e.Row.Item is Sales selectedRow)
             {
-                if (e.Row.Item is Sales selectedRow)
+                var currentStatus = selectedRow.Status;
+                bool isEditable = SalesUtils.IsLocalStatus(currentStatus.ToString()) || currentStatus == Status.Aprovado; // Ajuste para enum
+
+                if (!isEditable)
                 {
-                    var currentStatus = selectedRow.Status.ToString();
-                    var localStatuses = GetStatusToComboBox.GetStatusToComboBoxList<Status>()
-                        .Where(SalesUtils.IsLocalStatus)
-                        .ToList();
-
-                    if (!localStatuses.Contains(currentStatus))
-                    {
-                        localStatuses.Add(currentStatus);
-                    }
-
-                    selectedRow.StatusList.Clear();
-                    selectedRow.StatusList.AddRange(localStatuses);
+                    e.Cancel = true;
+                    return;
                 }
+
+                var allowedStatuses = GetStatusToComboBox.GetStatusToComboBoxList<Status>()
+                    .Where(s => SalesUtils.IsLocalStatus(s) || s == Status.Aprovado.ToString())
+                    .ToList();
+
+                selectedRow.StatusList.Clear();
+                selectedRow.StatusList.AddRange(allowedStatuses);
             }
         }
 
@@ -308,7 +307,7 @@ namespace NeuroApp
 
                         selectedRow.StatusList.Clear();
                         selectedRow.StatusList.AddRange(GetStatusToComboBox.GetStatusToComboBoxList<Status>()
-                            .Where(SalesUtils.IsLocalStatus)); 
+                            .Where(SalesUtils.IsLocalStatus));
                     }
                 }
             }
@@ -466,7 +465,7 @@ namespace NeuroApp
                         WarrantyMonths = 3
                     };
 
-                    var dialog = new WarrantyDetailsDialog(warranty, new WarrantyManager(_configuration));
+                    var dialog = new WarrantyDetailsDialog(warranty, _configuration);
                     var dialogResult = dialog.ShowDialog();
 
                     if (dialogResult == true)
@@ -590,17 +589,23 @@ namespace NeuroApp
             {
                 if (DataGridSales.SelectedItem is Sales selectedSale)
                 {
-                    if (SalesUtils.IsLocalStatus(selectedStatus))
+                    if (SalesUtils.IsLocalStatus(selectedStatus) || selectedStatus == "Aprovado")
                     {
                         selectedSale.IsStatusModified = true;
                         Status? enumStatus = GetStatusToComboBox.ConvertDisplayToEnum<Status>(selectedStatus);
 
                         if (!enumStatus.HasValue || selectedSale.Status.ToString() == enumStatus.ToString()) return;
 
+                        selectedSale.DisplayStatus = selectedStatus;
+
                         DatabaseActions databaseActions = new(_configuration);
                         await databaseActions.UpdateStatusOnDatabaseAsync(selectedSale.Code, enumStatus.ToString());
 
-                        Console.WriteLine($"Status atualizado para {selectedStatus} na OS {selectedSale.Code}");
+                        MessageBox.Show($"Status atualizado para {selectedStatus} na OS {selectedSale.Code}", "Status atualizado!", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        comboBox.IsEnabled = false;
                     }
                 }
             }

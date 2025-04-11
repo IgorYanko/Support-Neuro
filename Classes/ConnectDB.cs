@@ -102,33 +102,47 @@ namespace NeuroApp.Classes
 
         public async Task VerifyAndSave(Sales sale)
         {
-            try
+            using (var connection = new NpgsqlConnection(ConnectionString))
             {
-                using (var connection = new NpgsqlConnection(ConnectionString))
+                await connection.OpenAsync();
+                using (var transaction = await connection.BeginTransactionAsync())
                 {
-                    await connection.OpenAsync();
-
-                    var (currentStatus, currentApprovedAt) = await GetCurrentStatusAsync(connection, sale.Code);
-
-                    DateTime? approvedAt = currentApprovedAt ?? (sale.Status == Status.Aprovado ? DateTime.Now : null);
-
-                    DateTime? deadline = sale.Status == Status.Aprovado
-                        ? BusinessDayCalculator.CalculateDeadline(approvedAt.Value)
-                        : null;
-
-                    await InsertOrUpdateServiceOrdersAsync(connection, sale, approvedAt, deadline);
-
-                    foreach (var tag in sale.Tags)
+                    try
                     {
-                        await SaveTagForOSAsync(sale.Code, tag.TagId);
+                        var (currentStatus, currentApprovedAt) = await GetCurrentStatusAsync(connection, sale.Code);
+                        
+                        DateTime? approvedAt = currentApprovedAt ?? (sale.Status == Status.Aprovado ? DateTime.Now : null);
+                        
+                        DateTime? deadline = sale.Status == Status.Aprovado
+                            ? BusinessDayCalculator.CalculateDeadline(approvedAt.Value)
+                            : null;
+
+                        await InsertOrUpdateServiceOrdersAsync(connection, sale, approvedAt, deadline);
+
+                        await DeleteExistingTagsForSaleAsync(connection, transaction, sale.Code);
+
+                        foreach (var tag in sale.Tags)
+                        {
+                            await SaveTagForOSAsync(connection, transaction, sale.Code, tag.TagId);
+                        }
+
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        Console.WriteLine($"Erro ao salvar venda e tags: {ex.Message}");
+                        throw;
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erro: {ex.Message}");
-                throw;
-            }
+        }
+
+        private async Task DeleteExistingTagsForSaleAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string osCode)
+        {
+            var command = new NpgsqlCommand("DELETE FROM salestags WHERE oscode = @osCode", connection, transaction);
+            command.Parameters.AddWithValue("@osCode", osCode);
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task<bool> CheckIfOsExistsAsync(string osCode)
@@ -394,42 +408,19 @@ namespace NeuroApp.Classes
             return sale;
         }
 
-        public async Task SaveTagForOSAsync(string osCode, string tagId)
+        public async Task SaveTagForOSAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string osCode, string tagId)
         {
-            try
-            {
-                using var connection = new NpgsqlConnection(ConnectionString);
-                await connection.OpenAsync();
 
-                var checkQuery = "SELECT COUNT(*) FROM salestags WHERE oscode = @OSCode AND tagid = @TagId";
-                using var checkCommand = new NpgsqlCommand(checkQuery, connection);
-                checkCommand.Parameters.AddWithValue("@OSCode", osCode);
-                checkCommand.Parameters.AddWithValue("@TagId", tagId);
+            var query = @"
+                INSERT INTO salestags (oscode, tagid)
+                VALUES (@OSCode, @tagId)
+                ON CONFLICT DO NOTHING";
 
-                int tagExists = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
-                
-                if (tagExists > 0)
-                {
-                    Console.WriteLine($"Tag {tagId} já está associada à OS {osCode}, não será inserida novamente.");
-                    return;
-                }
-                
-                var query = @"
-                        INSERT INTO salestags (oscode, tagid)
-                        VALUES (@OSCode, @tagId)
-                        ON CONFLICT DO NOTHING";
+            var command = new NpgsqlCommand(query, connection, transaction);
+            command.Parameters.AddWithValue("@OSCode", osCode);
+            command.Parameters.AddWithValue("@tagId", tagId);
 
-                using var command = new NpgsqlCommand(query, connection);
-                command.Parameters.AddWithValue("@OSCode", osCode);
-                command.Parameters.AddWithValue("@tagId", tagId);
-                
-                await command.ExecuteNonQueryAsync();
-                Console.WriteLine($"Tag {tagId} associada à OS {osCode}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erro ao salvar Tag para OS: {ex.Message}");
-            }
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task<List<Tag>> GetTagsForOsAsync(string osCode)
@@ -656,6 +647,162 @@ namespace NeuroApp.Classes
                 Console.WriteLine($"Erro ao atualizar status da OS {ex.Message}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="warranty"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        /// 
+
+        public async Task UpdateWarrantyAsync(Warranty warranty)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(@"
+                UPDATE warranties SET
+                    ClientName = @ClientName,
+                    Device = @Device,
+                    ServiceDate = @ServiceDate,
+                    WarrantyEndDate = @WarrantyEndDate,
+                    WarrantyMonths = @WarrantyMonths,
+                    Observation = @Observation,
+                    SerialNumber = @SerialNumber
+                    WHERE id = @Id", connection);
+
+            command.Parameters.AddWithValue("@ClientName", warranty.ClientName ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Device", warranty.Device ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@ServiceDate", warranty.ServiceDate.Date);
+            command.Parameters.AddWithValue("@WarrantyEndDate", warranty.WarrantyEndDate.Date);
+            command.Parameters.AddWithValue("@WarrantyMonths", warranty.WarrantyMonths);
+            command.Parameters.AddWithValue("@Observation", warranty.Observation ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@SerialNumber", warranty.SerialNumber ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Id", warranty.Id);
+
+            int affectedRows = await command.ExecuteNonQueryAsync();
+
+            if (affectedRows == 0)
+            {
+                throw new Exception("Nenhuma garantia foi encontrada com esse número de série.");
+            }
+        }
+
+        public async Task SaveWarrantyAsync(Warranty warranty)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(@"
+                INSERT INTO warranties
+                (ClientName, SerialNumber, Device, ServiceDate, WarrantyEndDate, WarrantyMonths, Observation)
+                VALUES
+                (@ClientName, @SerialNumber, @Device, @ServiceDate, @WarrantyEndDate, @WarrantyMonths, @Observation)
+                ON CONFLICT (SerialNumber) DO UPDATE SET
+                    ClientName = EXCLUDED.ClientName,
+                    SerialNumber = EXCLUDED.SerialNumber,
+                    Device = EXCLUDED.Device,
+                    ServiceDate = EXCLUDED.ServiceDate,
+                    WarrantyEndDate = EXCLUDED.WarrantyEndDate,
+                    WarrantyMonths = EXCLUDED.WarrantyMonths,
+                    Observation = EXCLUDED.Observation", connection);
+
+            command.Parameters.AddWithValue("@ClientName", warranty.ClientName);
+            command.Parameters.AddWithValue("@SerialNumber", warranty.SerialNumber ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Device", warranty.Device ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@ServiceDate", warranty.ServiceDate.Date);
+            command.Parameters.AddWithValue("@WarrantyEndDate", warranty.WarrantyEndDate.Date);
+            command.Parameters.AddWithValue("@WarrantyMonths", warranty.WarrantyMonths);
+            command.Parameters.AddWithValue("@Observation", warranty.Observation ?? (object)DBNull.Value);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task<List<Warranty>> GetAllWarrantiesAsync()
+        {
+            var warranties = new List<Warranty>();
+
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand("SELECT * FROM Warranties ORDER BY WarrantyEndDate ASC", connection);
+
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                warranties.Add(new Warranty
+                {
+                    Id = reader.GetInt32("id"),
+                    OsCode = reader["OsCode"].ToString(),
+                    ClientName = reader["ClientName"].ToString(),
+                    SerialNumber = reader["SerialNumber"]?.ToString(),
+                    Device = reader["Device"]?.ToString(),
+                    ServiceDate = reader.GetDateTime(reader.GetOrdinal("ServiceDate")),
+                    WarrantyEndDate = reader.GetDateTime(reader.GetOrdinal("WarrantyEndDate")),
+                    WarrantyMonths = reader.GetInt32(reader.GetOrdinal("WarrantyMonths")),
+                    Observation = reader["Observation"]?.ToString()
+                });
+            }
+
+            return warranties;
+        }
+
+        public async Task<List<Warranty>> GetWarrantyBySearchAsync(string searchText)
+        {
+            var warranties = new List<Warranty>();
+
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(
+                @"SELECT * FROM Warranties WHERE serialnumber LIKE '%' || :SearchText || '%'",
+                connection
+            );
+            
+            command.Parameters.AddWithValue(":SearchText", searchText);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                warranties.Add(new Warranty
+                {
+                    OsCode = reader["OsCode"].ToString(),
+                    ClientName = reader["ClientName"].ToString(),
+                    SerialNumber = reader["SerialNumber"]?.ToString(),
+                    Device = reader["Device"]?.ToString(),
+                    ServiceDate = reader.GetDateTime(reader.GetOrdinal("ServiceDate")),
+                    WarrantyEndDate = reader.GetDateTime(reader.GetOrdinal("WarrantyEndDate")),
+                    WarrantyMonths = reader.GetInt32(reader.GetOrdinal("WarrantyMonths")),
+                    Observation = reader["Observation"]?.ToString()
+                });
+            }
+
+            return warranties;
+        }
+
+        public async Task DeleteWarrantyByOsCodeAsync(string osCode)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand("DELETE FROM Warranties WHERE OsCode = @OsCode", connection);
+            command.Parameters.AddWithValue("@OsCode", osCode);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task DeleteWarrantyAsync(string serialNumber)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand("DELETE FROM Warranties WHERE serialnumber = @SerialNumber", connection);
+            command.Parameters.AddWithValue("@SerialNumber", serialNumber);
+
+            await command.ExecuteNonQueryAsync();
         }
     }
 }

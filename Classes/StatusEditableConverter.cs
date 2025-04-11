@@ -10,8 +10,9 @@ namespace NeuroApp.Classes
         {
             if (value is string status)
             {
-                return SalesUtils.IsStatusEditable(value as string);
+                return status == "Aprovado" || SalesUtils.IsLocalStatus(status)/*SalesUtils.IsStatusEditable(value as string)*/;
             }
+            
             return false;
         }
 

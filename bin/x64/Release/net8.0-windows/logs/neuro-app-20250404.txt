@@ -1,0 +1,103 @@
+2025-04-04 11:27:09.752 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 11:27:10.929 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 11:27:12.353 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 11:27:12.354 -03:00 [INF] MainViewModel inicializado
+2025-04-04 11:27:12.354 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 11:27:14.454 -03:00 [INF] Janela de login exibida
+2025-04-04 11:36:38.163 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-04-04 11:36:52.571 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 11:36:52.844 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 11:36:54.118 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 11:36:54.118 -03:00 [INF] MainViewModel inicializado
+2025-04-04 11:36:54.119 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 11:36:56.415 -03:00 [INF] Janela de login exibida
+2025-04-04 11:37:15.352 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 11:37:52.623 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 11:37:54.599 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-04-04 11:43:05.590 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 11:43:05.779 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 11:43:06.491 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 11:43:06.491 -03:00 [INF] MainViewModel inicializado
+2025-04-04 11:43:06.492 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 11:43:08.072 -03:00 [INF] Janela de login exibida
+2025-04-04 11:48:00.702 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-04-04 11:48:39.231 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 11:48:41.470 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 11:48:42.996 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 11:48:43.000 -03:00 [INF] MainViewModel inicializado
+2025-04-04 11:48:43.005 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 11:48:51.543 -03:00 [INF] Janela de login exibida
+2025-04-04 11:52:45.873 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 13:16:18.292 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 13:16:18.459 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 13:16:19.339 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 13:16:19.341 -03:00 [INF] MainViewModel inicializado
+2025-04-04 13:16:19.342 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 13:16:21.552 -03:00 [INF] Janela de login exibida
+2025-04-04 13:28:09.659 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-04-04 13:28:22.831 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 13:28:22.970 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 13:28:24.072 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 13:28:24.075 -03:00 [INF] MainViewModel inicializado
+2025-04-04 13:28:24.075 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 13:28:26.029 -03:00 [INF] Janela de login exibida
+2025-04-04 13:28:49.463 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 13:34:16.094 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-04-04 13:38:42.884 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 13:38:44.070 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 13:38:48.991 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 13:38:48.994 -03:00 [INF] MainViewModel inicializado
+2025-04-04 13:38:48.996 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 13:38:53.133 -03:00 [INF] Janela de login exibida
+2025-04-04 14:09:52.187 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 14:09:53.029 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 14:09:54.914 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 14:09:54.918 -03:00 [INF] MainViewModel inicializado
+2025-04-04 14:09:54.922 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 14:09:58.451 -03:00 [INF] Janela de login exibida
+2025-04-04 14:30:36.262 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 14:30:36.530 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 14:30:37.458 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 14:30:37.459 -03:00 [INF] MainViewModel inicializado
+2025-04-04 14:30:37.460 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 14:30:39.730 -03:00 [INF] Janela de login exibida
+2025-04-04 14:34:36.621 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 14:34:36.757 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 14:34:37.396 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 14:34:37.396 -03:00 [INF] MainViewModel inicializado
+2025-04-04 14:34:37.397 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 14:34:38.612 -03:00 [INF] Janela de login exibida
+2025-04-04 14:34:59.099 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-04-04 15:02:45.483 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 15:02:45.633 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 15:02:48.215 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 15:02:48.216 -03:00 [INF] MainViewModel inicializado
+2025-04-04 15:02:48.217 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 15:02:55.305 -03:00 [INF] Janela de login exibida
+2025-04-04 15:03:39.162 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-04-04 15:03:55.251 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 15:03:56.173 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 15:03:59.040 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 15:03:59.046 -03:00 [INF] MainViewModel inicializado
+2025-04-04 15:03:59.050 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 15:04:01.356 -03:00 [INF] Janela de login exibida
+2025-04-04 15:12:25.601 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 15:12:26.417 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 15:12:27.853 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 15:12:27.856 -03:00 [INF] MainViewModel inicializado
+2025-04-04 15:12:27.859 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 15:12:30.628 -03:00 [INF] Janela de login exibida
+2025-04-04 15:17:56.477 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 15:17:56.711 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 15:17:57.704 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 15:17:57.705 -03:00 [INF] MainViewModel inicializado
+2025-04-04 15:17:57.706 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 15:17:59.994 -03:00 [INF] Janela de login exibida
+2025-04-04 15:32:13.705 -03:00 [INF] Encerrando aplicação NeuroApp
+2025-04-04 16:32:12.881 -03:00 [INF] Iniciando aplicação NeuroApp
+2025-04-04 16:32:13.365 -03:00 [INF] Serviços configurados com sucesso
+2025-04-04 16:32:14.557 -03:00 [INF] SensioApiService inicializado com base URL: https://app.sensio.com.br/api/
+2025-04-04 16:32:14.557 -03:00 [INF] MainViewModel inicializado
+2025-04-04 16:32:14.558 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-04 16:32:16.344 -03:00 [INF] Janela de login exibida
+2025-04-04 16:47:52.555 -03:00 [INF] Encerrando aplicação NeuroApp

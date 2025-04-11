@@ -21,14 +21,26 @@ namespace NeuroApp.Classes
 
         public static List<string> GetStatusToComboBoxList<T>() where T : Enum
         {
-            return typeof(T).GetFields()
-                            .Where(f => f.IsLiteral)
-                            .Select(f =>
-                            {
-                                var attribute = f.GetCustomAttribute<JsonPropertyNameAttribute>();
-                                return attribute?.Name ?? NameMapping.GetValueOrDefault(f.Name, f.Name);
-                            })
-                            .ToList();
+            var list = new List<string>();
+
+            foreach (var field in typeof(T).GetFields().Where(f => f.IsLiteral))
+            {
+                var attribute = field.GetCustomAttribute<JsonPropertyNameAttribute>();
+                if (attribute != null)
+                {
+                    list.Add(attribute.Name);
+                }
+                else if (NameMapping.TryGetValue(field.Name, out string? mappedValue))
+                {
+                    list.Add(mappedValue);
+                }
+                else
+                {
+                    list.Add(field.Name);
+                }
+            }
+
+            return list;
         }
 
         public static T? ConvertDisplayToEnum<T>(string displayValue) where T : struct, Enum

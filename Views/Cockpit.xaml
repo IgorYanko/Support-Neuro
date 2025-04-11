@@ -13,6 +13,7 @@
         <classes:RemainingTimeToBrushConverter x:Key="TimeToBrushConverter"/>
         <classes:PauseButtonTextChanger x:Key="PauseButtonTextChanger"/>
         <classes:StatusEditableConverter x:Key="StatusEditableConverter"/>
+        <classes:StatusConverter x:Key="StatusConverter"/>
         <CubicEase x:Key="MaterialDesignEasing" EasingMode="EaseInOut"/>
     </UserControl.Resources>
 
@@ -79,26 +80,24 @@
         <DataGrid x:Name="DataGridSales" 
           Grid.Row="2"
           AutoGenerateColumns="False"
-          ItemsSource="{Binding SalesData}" 
-          ColumnHeaderHeight="50" 
-          Loaded="UserControl_Loaded"
-          Unloaded="UserControl_Unloaded"
-          HeadersVisibility="Column"
-          RowHeaderWidth="0"
+          ItemsSource="{Binding SalesData}"
+          Style="{DynamicResource MaterialDesignDataGrid}"
+          RowBackground="{DynamicResource MaterialDesignBackground}"
+          AlternatingRowBackground="#F5F5F5"
+          CanUserReorderColumns="False"           
           CanUserSortColumns="False"
           CanUserResizeColumns="False"
           CanUserResizeRows="False"
           CanUserAddRows="False"
-          Style="{DynamicResource MaterialDesignDataGrid}"
-          RowBackground="{DynamicResource MaterialDesignBackground}"
-          AlternatingRowBackground="#F5F5F5"
           AllowDrop="True"
           Margin="10"
-          MinHeight="600"
-          MinWidth="400"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch"
           ScrollViewer.HorizontalScrollBarVisibility="Auto"
           ScrollViewer.VerticalScrollBarVisibility="Auto"
           ScrollViewer.ScrollChanged="DataGridSales_ScrollChanged"
+          Loaded="UserControl_Loaded"
+          Unloaded="UserControl_Unloaded"
           DragOver="DataGridSales_DragOver"
           BeginningEdit="DataGridSales_BeginningEdit"
           CellEditEnding="DataGridSales_CellEditEnding"
@@ -172,13 +171,12 @@
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
                             <ComboBox ItemsSource="{Binding StatusList}"
-                              SelectedItem="{Binding DisplayStatus, Mode=TwoWay}"
-                              FontSize="16"
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center"
-                              Width="Auto"
-                              IsEnabled="{Binding Status, Converter={StaticResource StatusEditableConverter}}"
-                              SelectionChanged="ComboBox_SelectionChanged"/>
+                                      FontSize="16"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Width="Auto"
+                                      SelectedItem="{Binding Status, Mode=TwoWay, Converter={StaticResource StatusConverter}}"
+                                      SelectionChanged="ComboBox_SelectionChanged"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>

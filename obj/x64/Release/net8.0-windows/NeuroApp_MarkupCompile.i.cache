@@ -11,10 +11,10 @@ false
 TRACE;RELEASE;NET;NET8_0;NETCOREAPP
 C:\Users\supor\Source\Repos\Support-Neuro\App.xaml
 111698783029
-
-49-1842597209
+11000104800
+491981611295
 225-1392225477
 Views\ClientPage.xaml;Views\Cockpit.xaml;Views\Customers.xaml;Views\HomeScreen.xaml;Views\LoginScreen.xaml;Views\MainWindow.xaml;Views\SupportGuideDialog.xaml;Views\SupportGuideScreen.xaml;Views\SupportStaticGuideDialog.xaml;Views\WarrantyDetailsDialog.xaml;Views\WarrantyScreen.xaml;
 
-False
+True
 

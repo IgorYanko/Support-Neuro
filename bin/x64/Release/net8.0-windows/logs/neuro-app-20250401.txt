@@ -20,3 +20,6 @@
 2025-04-01 09:38:00.351 -03:00 [INF] String de conexão: Host=localhost;Database=NeuroApp;Username=postgres;Password=Sivec@20
 2025-04-01 09:38:01.570 -03:00 [DBG] Navegando para a HomeScreen
 2025-04-01 09:38:04.594 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-01 09:57:27.817 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-01 09:57:38.217 -03:00 [DBG] Navegando para a HomeScreen
+2025-04-01 09:59:09.873 -03:00 [INF] Encerrando aplicação NeuroApp
