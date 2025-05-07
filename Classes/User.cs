@@ -13,11 +13,17 @@ namespace NeuroApp
             generic = 0
         }
 
-        public string UserName { get; }
+        public string UserName { get; set; }
         public UserFunction Function { get; }
 
         public User(string username, string password, UserFunction function)
         { 
+            UserName = username;
+            Function = function;
+        }
+
+        public User(string username, UserFunction function)
+        {
             UserName = username;
             Function = function;
         }

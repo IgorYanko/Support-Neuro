@@ -20,14 +20,30 @@ namespace NeuroApp
             remove { CommandManager.RequerySuggested -= value; }
         }
 
-        public bool CanExecute(object? parameter)
+        public bool CanExecute(object? parameter) => _canExecute == null || _canExecute();
+
+        public void Execute(object? parameter) => _execute();
+    }
+
+    public class RelayCommand<T> : ICommand
+    {
+        private readonly Action<T> _execute;
+        private readonly Func<T, bool>? _canExecute;
+
+        public RelayCommand(Action<T> execute, Func<T, bool>? canExecute = null)
         {
-            return _canExecute == null || _canExecute();
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            _canExecute = canExecute;
         }
 
-        public void Execute(object? parameter)
+        public event EventHandler? CanExecuteChanged
         {
-            _execute();
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
         }
+
+        public bool CanExecute(object? parameter) => _canExecute == null || _canExecute((T)parameter);
+
+        public void Execute(object? parameter) => _execute((T)parameter);
     }
 } 

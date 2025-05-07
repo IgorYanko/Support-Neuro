@@ -22,8 +22,8 @@ namespace NeuroApp.Views
             _buttons = (ResponsiveBigButtons)Application.Current.Resources["ResponsiveBigButtons"] as ResponsiveBigButtons ?? new ResponsiveBigButtons();
             SizeChanged += ContentControl_SizeChanged;
 
-            Cockpit cockpit = new(_mainViewModel, _configuration);
-            _mainViewModel.CurrentView = cockpit;
+            HomeScreen homeScreen = new(_mainViewModel, _configuration);
+            _mainViewModel.CurrentView = homeScreen;
         }
 
         private void ContentControl_SizeChanged(object sender, SizeChangedEventArgs e)

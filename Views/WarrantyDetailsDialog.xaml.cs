@@ -19,6 +19,7 @@ namespace NeuroApp
             _actions = new(configuration);
 
             ClientNameTextBox.Text = _warranty.ClientName;
+            OsCodeTextBox.Text = _warranty.OsCode;
             SerialNumberTextBox.Text = _warranty.SerialNumber;
             DeviceTextBox.Text = _warranty.Device;
             ServiceDatePicker.SelectedDate = _warranty.ServiceDate;
@@ -64,6 +65,7 @@ namespace NeuroApp
             try
             {
                 string clientName = ClientNameTextBox.Text;
+                string osCode = OsCodeTextBox.Text;
                 string serialNumber = SerialNumberTextBox.Text;
                 string device = DeviceTextBox.Text;
                 DateTime serviceDate = ServiceDatePicker.SelectedDate ?? DateTime.Now;
@@ -86,12 +88,14 @@ namespace NeuroApp
                     {
                         await _actions.SaveWarrantyAsync(_warranty);
                         MessageBox.Show("Garantia salva com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                        DialogResult = true;
                         Close();
                     }
                     else
                     {
                         await _actions.UpdateWarrantyAsync(_warranty);
                         MessageBox.Show("Garantia salva com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                        DialogResult = true;
                         Close();
                     }
                 }

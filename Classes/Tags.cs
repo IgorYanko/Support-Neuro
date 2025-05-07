@@ -64,8 +64,7 @@ namespace NeuroApp.Classes
 
             return tagDictionary.TryGetValue(id.Trim(), out var tag)
                 ? tag
-                : null;
-                
+                : null;   
         }
     }
 }

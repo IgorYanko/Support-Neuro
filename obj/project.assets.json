@@ -1472,9 +1472,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\supor\\source\\repos\\Support-Neuro\\NeuroApp.csproj",
+      "projectUniqueName": "C:\\Users\\supor\\Source\\Repos\\Support-Neuro\\NeuroApp.csproj",
       "projectName": "NeuroApp",
-      "projectPath": "C:\\Users\\supor\\source\\repos\\Support-Neuro\\NeuroApp.csproj",
+      "projectPath": "C:\\Users\\supor\\Source\\Repos\\Support-Neuro\\NeuroApp.csproj",
       "packagesPath": "C:\\Users\\supor\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\supor\\Source\\Repos\\Support-Neuro\\obj\\",
       "projectStyle": "PackageReference",

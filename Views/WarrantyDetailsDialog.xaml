@@ -46,7 +46,11 @@
                          materialDesign:HintAssist.Hint="Nome do Cliente"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          Margin="0,8"/>
-                
+
+                <TextBox x:Name="OsCodeTextBox"
+                         materialDesign:HintAssist.Hint="Nº Os"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
                 <TextBox x:Name="SerialNumberTextBox"
                          materialDesign:HintAssist.Hint="Número de Série"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"

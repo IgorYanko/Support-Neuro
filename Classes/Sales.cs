@@ -193,7 +193,16 @@ namespace NeuroApp.Classes
         [JsonPropertyName("approved")]
         public bool Approved { get; set; }
 
-        public string? Observation {  get; set; }
+        private string _observation;
+        public string? Observation
+        {
+            get => _observation;
+            set
+            {
+                _observation = value;
+                OnPropertyChanged(nameof(Observation));
+            }
+        }
 
         public bool IsManual { get; set; }
 

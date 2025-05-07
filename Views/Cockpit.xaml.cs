@@ -8,12 +8,13 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
-using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.Configuration;
 using NeuroApp.Api;
 using NeuroApp.Classes;
 using NeuroApp.Interfaces;
+using NeuroApp.Views;
+using System.Windows.Threading;
+using System.Collections.Specialized;
 
 namespace NeuroApp
 {
@@ -21,6 +22,7 @@ namespace NeuroApp
     {
         private readonly IConfiguration _configuration;
         private readonly IMainViewModel _mainViewModel;
+
         public ObservableCollection<Sales> SalesData { get; set; } = new ObservableCollection<Sales>();
         private ObservableCollection<Sales> _cachedSalesData = new();
         private TimerService? _apiTimer;
@@ -39,7 +41,9 @@ namespace NeuroApp
             _draggedRow = null;
             InitializeTimer();
             DataContext = mainViewModel;
-            Console.WriteLine($"Cockpit inicializado. ViewModel: {mainViewModel}");
+
+            DataGridSales.Loaded += (s, e) => UpdateItemsControl();
+            DataGridSales.SizeChanged += (s, e) => UpdateItemsControl();
         }
 
         public async Task ProcessSalesDataAsync()
@@ -91,6 +95,7 @@ namespace NeuroApp
         {
             try
             {
+                DatabaseActions database = new(_configuration);
                 var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json").Build();
@@ -112,11 +117,19 @@ namespace NeuroApp
                     throw new InvalidOperationException("API response is null or invalid.");
                 }
 
+                List<string> deletedOsCodes = await database.GetDeletedOsCodesAsync();
+
                 DateTime maxDate = DateTime.Today.AddDays(-30);
 
-                return new ObservableCollection<Sales>(
-                    apiResponse.Response.Where(sale => sale.DateCreated >= maxDate && sale.DateCreated <= DateTime.Today)
-                );
+                var filteredSales = apiResponse.Response
+                    .Where(sale =>
+                        sale.DateCreated >= maxDate &&
+                        sale.DateCreated <= DateTime.Today &&
+                        !deletedOsCodes.Contains(sale.Code)
+                    )
+                    .ToList();
+
+                return new ObservableCollection<Sales>(filteredSales);
             }
             catch (Exception ex)
             {
@@ -243,22 +256,62 @@ namespace NeuroApp
             });
         }
 
+        private bool _isSyncingScroll = false;
+
         private void DataGridSales_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            if (_isLoading) return;
+            //if (_isLoading || _isSyncingScroll) return;
 
-            var scrollViewer = sender as ScrollViewer;
-            if (scrollViewer != null)
-            {
-                if (scrollViewer.ScrollableWidth > 0)
-                {
-                    scrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
-                }
-                else
-                {
-                    scrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
-                }
-            }
+            //_isSyncingScroll = true;
+            //try
+            //{
+            //    var dataGridScrollViewer = DependencyObjectExtensions.FindVisualChild<ScrollViewer>(DataGridSales);
+            //    if (dataGridScrollViewer != null && ScrollViewerObservations != null)
+            //    {
+            //        if (dataGridScrollViewer.ScrollableHeight > 0 && ScrollViewerObservations.ScrollableHeight > 0)
+            //        {
+            //            double dataGridScrollRatio = dataGridScrollViewer.VerticalOffset / dataGridScrollViewer.ScrollableHeight;
+            //            double itemsControlScrollPosition = dataGridScrollRatio * (ScrollViewerObservations.ScrollableHeight);
+
+            //            if (!double.IsNaN(itemsControlScrollPosition))
+            //            {
+            //                ScrollViewerObservations.ScrollToVerticalOffset(itemsControlScrollPosition);
+            //            }
+            //        }
+            //    }
+            //}
+            //finally
+            //{
+            //    _isSyncingScroll = false;
+            //}
+        }
+
+        private void ScrollViewerObservations_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            //if (_isLoading || _isSyncingScroll) return;
+
+            //_isSyncingScroll = true;
+            //try
+            //{
+            //    var dataGridScrollViewer = DependencyObjectExtensions.FindVisualChild<ScrollViewer>(DataGridSales);
+            //    if (dataGridScrollViewer != null && sender is ScrollViewer scrollViewer)
+            //    {
+            //        if (scrollViewer.ScrollableHeight > 0 && dataGridScrollViewer.ScrollableHeight > 0)
+            //        {
+            //            double itemsControlScrollRatio = scrollViewer.VerticalOffset / scrollViewer.ScrollableHeight;
+            //            double dataGridScrollPosition = itemsControlScrollRatio * ScrollViewerObservations.ScrollableHeight;
+
+            //            if (!double.IsNaN(dataGridScrollPosition))
+            //            {
+            //                dataGridScrollViewer.ScrollToVerticalOffset(dataGridScrollPosition);
+            //            }
+            //        }
+            //    }
+            //}
+            //finally
+            //{
+            //    _isSyncingScroll = false;
+            //}
         }
 
         private void DataGridSales_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
@@ -280,40 +333,6 @@ namespace NeuroApp
 
                 selectedRow.StatusList.Clear();
                 selectedRow.StatusList.AddRange(allowedStatuses);
-            }
-        }
-
-        private async void DataGridSales_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
-        {
-            try
-            {
-                if (e.Column.Header?.ToString() != "Observações")
-                {
-                    return;
-                }
-
-                if (e.EditingElement is TextBox editedElement)
-                {
-                    string cellText = editedElement.Text;
-
-                    if (e.Row.Item is Sales selectedRow)
-                    {
-                        var numeroOs = selectedRow.Code;
-
-                        DatabaseActions databaseActions = new(_configuration);
-                        await databaseActions.AddObservationsAsync(cellText, numeroOs);
-
-                        selectedRow.Observation = cellText;
-
-                        selectedRow.StatusList.Clear();
-                        selectedRow.StatusList.AddRange(GetStatusToComboBox.GetStatusToComboBoxList<Status>()
-                            .Where(SalesUtils.IsLocalStatus));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao salvar observação: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -554,6 +573,64 @@ namespace NeuroApp
             }
         }
 
+        private async void AddObservation_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is MenuItem menuItem && menuItem.Parent is ContextMenu contextMenu)
+                {
+                    DataGridRow row = null;
+                    var target = contextMenu.PlacementTarget as DependencyObject ?? (e.OriginalSource as DependencyObject);
+                    if (target != null)
+                    {
+                        row = DependencyObjectExtensions.FindAncestor<DataGridRow>(target);
+                    }
+                    if (row == null)
+                    {
+                        var dataGrid = DependencyObjectExtensions.FindAncestor<DataGrid>(target);
+                        if (dataGrid != null && dataGrid.SelectedItem is Sales selectedRow)
+                        {
+                            row = dataGrid.ItemContainerGenerator.ContainerFromItem(selectedRow) as DataGridRow;
+                        }
+                    }
+
+                    if (row != null && row.DataContext is Sales selectedSale)
+                    {
+                        string osCode = selectedSale.Code;
+
+                        if (string.IsNullOrEmpty(osCode))
+                        {
+                            MessageBox.Show("O código da OS não está disponível.", "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
+
+                        var dialog = new ObservationsDialog(
+                            _configuration,
+                            osCode,
+                            !string.IsNullOrEmpty(selectedSale.Observation) ? selectedSale.Observation : null);
+
+                        dialog.ShowDialog();
+
+                        if (dialog.IsConfirmed)
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                ProcessSalesDataAsync();
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Selecione uma linha válida no DataGrid.", "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao adicionar observação: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void DataGridSales_PreviewMouseMove(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && _draggedRow != null)
@@ -615,6 +692,120 @@ namespace NeuroApp
         {
             _mainViewModel.ShowHomeScreen();
         }
+
+        private void UpdateListBoxItemHeights()
+        {
+            //if (_isLoading || DataGridSales == null || ItemsControlButton == null) return;
+
+            //Dispatcher.BeginInvoke(() =>
+            //{
+            //    try
+            //    {
+            //        int itemCount = Math.Min(DataGridSales.Items.Count, ItemsControlButton.Items.Count);
+
+            //        for (int i = 0; i < itemCount; i++)
+            //        {
+            //            var dataGridRow = GetContainerSafely<DataGridRow>(DataGridSales, i);
+            //            var contentPresenter = GetContainerSafely<ContentPresenter>(ItemsControlButton, i);
+
+            //            if (dataGridRow != null && contentPresenter != null)
+            //            {
+            //                contentPresenter.Height = dataGridRow.ActualHeight;
+            //                var button = DependencyObjectExtensions.FindVisualChild<Button>(contentPresenter);
+            //                if (button != null)
+            //                {
+            //                    button.Height = dataGridRow.ActualHeight * 0.5;
+            //                    button.Width = button.Height;
+            //                }
+            //            }
+            //        }
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        MessageBox.Show($"Erro ao atualizar alturas: {ex.Message}");
+            //    }
+            //}, DispatcherPriority.Background);
+        }
+
+        private void UpdateListBoxPadding()
+        {
+            //if (DataGridSales == null || ScrollViewerObservations == null) return;
+
+            //ScrollViewerObservations.Margin = new Thickness(0, 52, 0, 0);
+        }
+
+        private void UpdateItemsControl()
+        {
+            UpdateListBoxItemHeights();
+            UpdateListBoxPadding();
+        }
+
+        private T GetContainerSafely<T>(ItemsControl control, int index) where T : DependencyObject
+        {
+            try
+            {
+                if (index >= 0 && index < control.Items.Count)
+                {
+                    return control.ItemContainerGenerator.ContainerFromIndex(index) as T;
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            return null;
+        }
+
+        public void OpenPopup(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.DataContext is Sales sale)
+            {
+                if (!string.IsNullOrEmpty(sale.Observation))
+                {
+                    //ObservationPopUp.DataContext = sale;
+                    //ObservationPopUp.PlacementTarget = button;
+                    //ObservationPopUp.Placement = PlacementMode.Top;
+                    //ObservationPopUp.VerticalOffset = -10;
+                    //ObservationPopUp.IsOpen = true;
+
+                    ObservationPopUp.PlacementTarget = button;
+                    ObservationPopUp.IsOpen = true;
+
+                    var vm = DataContext as Sales;
+                    
+                }
+                else
+                {
+                    MessageBox.Show("Erro teste!");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Erro!");
+            }
+
+            //PopupText.Text = button.DataContext as string;
+        }
+
+        private void ClosePopupButton_Click(object sender, RoutedEventArgs e)
+        {
+            ObservationPopUp.IsOpen = false;
+        }
+
+        private void ObservationButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Button button && button.DataContext is Sales item)
+            {
+                var vm = DataContext as MainViewModel;
+                if (vm != null)
+                {
+                    vm.SelectedSale = item;
+                    ObservationPopUp.PlacementTarget = button;
+                    ObservationPopUp.IsOpen = true;
+                    e.Handled = true;
+                }
+            }
+        }
     }
 }
 
@@ -628,5 +819,54 @@ public static class DependencyObjectExtensions
         if (parentObject is T parent) return parent;
 
         return GetParentOfType<T>(parentObject);
+    }
+
+    public static T FindVisualChild<T>(DependencyObject obj) where T : DependencyObject
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+        {
+            var child = VisualTreeHelper.GetChild(obj, i);
+            if (child is T result)
+                return result;
+            var childResult = FindVisualChild<T>(child);
+            if (childResult != null)
+                return childResult;
+        }
+        return null;
+    }
+
+    public static T FindAncestor<T>(this DependencyObject element) where T : DependencyObject
+    {
+        while (element != null)
+        {
+            if (element is T ancestor)
+                return ancestor;
+            element = VisualTreeHelper.GetParent(element);
+        }
+        return null;
+    }
+}
+
+public static class DataGridExtensions
+{
+    public static DataGridRow GetRow(this DataGrid grid, int index)
+    {
+        return grid.ItemContainerGenerator.ContainerFromIndex(index) as DataGridRow;
+    }
+
+    public static int GetFirstVisibleRowIndex(this DataGrid grid)
+    {
+        var scrollViewer = DependencyObjectExtensions.FindVisualChild<ScrollViewer>(grid);
+        if (scrollViewer == null) return 0;
+
+        return (int)(scrollViewer.VerticalOffset / grid.RowHeight);
+    }
+
+    public static int GetLastVisibleRowIndex(this DataGrid grid)
+    {
+        var scrollViewer = DependencyObjectExtensions.FindVisualChild<ScrollViewer>(grid);
+        if (scrollViewer == null) return grid.Items.Count - 1;
+
+        return (int)((scrollViewer.VerticalOffset + scrollViewer.ViewportHeight) / grid.RowHeight);
     }
 }

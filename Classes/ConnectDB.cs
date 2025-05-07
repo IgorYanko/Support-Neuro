@@ -281,7 +281,7 @@ namespace NeuroApp.Classes
             };
         }
 
-        public async Task AddObservationsAsync(string obsText, string numeroOs)
+        public async Task<bool>AddObservationsAsync(string obsText, string numeroOs)
         {
             await using var npgsqlConnection = new NpgsqlConnection(ConnectionString);
 
@@ -297,8 +297,7 @@ namespace NeuroApp.Classes
 
                 if (currentObservation == obsText)
                 {
-                    Console.WriteLine($"A observação da OS {numeroOs} já está atualizada.");
-                    return;
+                    return false;
                 }
 
                 string obsQuery = "UPDATE serviceorders SET observations = @observation WHERE numos = @numeroOS";
@@ -307,6 +306,7 @@ namespace NeuroApp.Classes
                 updateCommand.Parameters.AddWithValue("numeroOs", numeroOs);
 
                 await updateCommand.ExecuteNonQueryAsync();
+                return true;
             }
             catch (Exception)
             {
@@ -461,6 +461,11 @@ namespace NeuroApp.Classes
                 using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
+                string registerDeletionQuery = "INSERT INTO deleted_orders (osCode) VALUES (@osCode) ON CONFLICT (osCode) DO NOTHING";
+                using var registerDeletionCommand = new NpgsqlCommand(registerDeletionQuery, connection);
+                registerDeletionCommand.Parameters.AddWithValue("osCode", osCode);
+                await registerDeletionCommand.ExecuteNonQueryAsync();
+
                 string removeTagsQuery = "UPDATE salestags SET excluded = true WHERE oscode = @oscode";
                 using var removeTagsCommand = new NpgsqlCommand(removeTagsQuery, connection);
                 removeTagsCommand.Parameters.AddWithValue("oscode", osCode);
@@ -470,9 +475,8 @@ namespace NeuroApp.Classes
                 using var removeOsCommand = new NpgsqlCommand(removeQuery, connection);
                 removeOsCommand.Parameters.AddWithValue("oscode", osCode);
                 await removeOsCommand.ExecuteNonQueryAsync();
-
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao remover OS {osCode}: {ex}");
             }
@@ -489,7 +493,7 @@ namespace NeuroApp.Classes
                     UPDATE serviceorders
                     SET pausedDate = @pausedDate
                     WHERE numos = @OsCode
-                    AND pausedDate IS NULL 
+                    AND pausedDate IS NULL
                     RETURNING pausedDate";
 
                 using var command = new NpgsqlCommand(pauseQuery, connection);
@@ -646,6 +650,32 @@ namespace NeuroApp.Classes
             {
                 Console.WriteLine($"Erro ao atualizar status da OS {ex.Message}");
                 return false;
+            }
+        }
+
+        public async Task<List<string>> GetDeletedOsCodesAsync()
+        {
+            try
+            {
+                using var connection = new NpgsqlConnection(ConnectionString);
+                await connection.OpenAsync();
+
+                string query = "SELECT osCode FROM deleted_orders";
+                using var command = new NpgsqlCommand(query, connection);
+
+                var deletedCodes = new List<string>();
+                using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    deletedCodes.Add(reader.GetString(0));
+                }
+
+                return deletedCodes;
+            }
+            catch (Exception ex)
+            {
+                return new List<string>();
             }
         }
 

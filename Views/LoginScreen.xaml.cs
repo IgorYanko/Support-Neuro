@@ -1,11 +1,13 @@
 ﻿using System.Windows;
 using System.Windows.Input;
-using MaterialDesignThemes.Wpf;
+using System.IO;
 using NeuroApp.Classes;
 using NeuroApp.Interfaces;
-using NeuroApp.Services;
 using NeuroApp.Views;
 using Microsoft.Extensions.Configuration;
+using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace NeuroApp
 {
@@ -20,29 +22,6 @@ namespace NeuroApp
             _mainViewModel = mainViewModel;
             _configuration = configuration;
         }
-
-        /// <summary>
-        /// Parte relacionada ao tema será ignorada na primeira versão
-        /// </summary>
-        //public bool IsDarkTheme { get; set; }
-        //private readonly PaletteHelper _paletteHelper = new();
-        
-        //private void toggleTheme(object sender, RoutedEventArgs e)
-        //{
-        //    ITheme theme = _paletteHelper.GetTheme();
-        //    if (IsDarkTheme = theme.GetBaseTheme() == BaseTheme.Dark)
-        //    {
-        //        IsDarkTheme = false;
-        //        theme.SetBaseTheme(Theme.Light);
-        //    }
-        //    else
-        //    {
-        //        IsDarkTheme = true;
-        //        theme.SetBaseTheme(Theme.Dark);
-        //    }
-            
-        //    _paletteHelper.SetTheme(theme);
-        //}
 
         private void BtnExit_Click(object sender, RoutedEventArgs e)
         {
@@ -86,6 +65,33 @@ namespace NeuroApp
                 return false;
             }
 
+            if (RememberMeCheckBox.IsChecked == true)
+            {
+                try
+                {
+                    var authData = new
+                    {
+                        Username = user.UserName,
+                        AuthToken = Guid.NewGuid().ToString(),
+                        Function = user.Function,
+                        Expiration = DateTime.Now.AddDays(30)
+                    };
+
+                    string json = JsonSerializer.Serialize(authData);
+
+                    byte[] encryptedData = ProtectedData.Protect(
+                        Encoding.UTF8.GetBytes(json),
+                        null,
+                        DataProtectionScope.CurrentUser);
+
+                    File.WriteAllBytes("auth.dat", encryptedData);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erro ao salvar credenciais: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+
             ProcessLogin(user);
             return true;
         }
@@ -108,7 +114,7 @@ namespace NeuroApp
             return new User(username, "password", function);
         }
 
-        private void ProcessLogin(User user)
+        public void ProcessLogin(User user)
         {
             PermissionSystem.Instance.SetCurrentUser(user);
         }
