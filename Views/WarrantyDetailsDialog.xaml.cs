@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using System.Windows.Media;
 using Microsoft.Extensions.Configuration;
 using NeuroApp.Classes;
 
@@ -15,26 +16,8 @@ namespace NeuroApp
         public WarrantyDetailsDialog(Warranty warranty, IConfiguration configuration)
         {
             InitializeComponent();
-            _warranty = warranty;
             _actions = new(configuration);
-
-            ClientNameTextBox.Text = _warranty.ClientName;
-            OsCodeTextBox.Text = _warranty.OsCode;
-            SerialNumberTextBox.Text = _warranty.SerialNumber;
-            DeviceTextBox.Text = _warranty.Device;
-            ServiceDatePicker.SelectedDate = _warranty.ServiceDate;
-            ObservationsTextBox.Text = _warranty.Observation;
-
-            if (_warranty.WarrantyMonths == 3)
-            {
-                WarrantyTypeComboBox.SelectedIndex = 0;
-            }
-            else if (_warranty.WarrantyMonths == 12)
-            {
-                WarrantyTypeComboBox.SelectedIndex = 1;
-            }
-
-            WarrantyMonthsTextBox.Text = _warranty.WarrantyMonths.ToString();
+  
             this.Closed += (sender, e) => OnClosedNotification?.Invoke();
         }
 
@@ -47,6 +30,10 @@ namespace NeuroApp
             else if (WarrantyTypeComboBox.SelectedIndex == 1)
             {
                 WarrantyMonthsTextBox.Text = "12";
+            }
+            else
+            {
+                
             }
         }
 
@@ -64,50 +51,65 @@ namespace NeuroApp
         {
             try
             {
-                string clientName = ClientNameTextBox.Text;
-                string osCode = OsCodeTextBox.Text;
-                string serialNumber = SerialNumberTextBox.Text;
-                string device = DeviceTextBox.Text;
-                DateTime serviceDate = ServiceDatePicker.SelectedDate ?? DateTime.Now;
-                int warrantyMonths = int.Parse(WarrantyMonthsTextBox.Text);
-                string observation = ObservationsTextBox.Text;
-
-                if (!string.IsNullOrEmpty(clientName) && !string.IsNullOrEmpty(serialNumber) && !string.IsNullOrEmpty(device))
+                if (!AreRequiredFieldsValid())
                 {
-                    if (_warranty == null)
-                        _warranty = new Warranty();
-
-                    _warranty.ClientName = clientName;
-                    _warranty.SerialNumber = serialNumber;
-                    _warranty.Device = device;
-                    _warranty.ServiceDate = serviceDate;
-                    _warranty.WarrantyMonths = warrantyMonths;
-                    _warranty.Observation = observation;
-
-                    if (_warranty.Id == 0)
-                    {
-                        await _actions.SaveWarrantyAsync(_warranty);
-                        MessageBox.Show("Garantia salva com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
-                        DialogResult = true;
-                        Close();
-                    }
-                    else
-                    {
-                        await _actions.UpdateWarrantyAsync(_warranty);
-                        MessageBox.Show("Garantia salva com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
-                        DialogResult = true;
-                        Close();
-                    }
+                    HighlightEmptyFields();
+                    MessageBox.Show("Preencha todos os campos obrigatórios!", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
                 }
-                else
-                {
-                    MessageBox.Show("Preencha os campos obrigatórios!", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+
+                _warranty ??= new Warranty();
+                UpdateWarrantyFromUI(_warranty);
+
+                bool isNew = _warranty.Id == 0;
+                await (isNew ? _actions.SaveWarrantyAsync(_warranty)
+                             : _actions.UpdateWarrantyAsync(_warranty));
+
+                MessageBox.Show("Garantia Salva com sucesso!", "Mensagem", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erro ao salvar a garantia: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private bool AreRequiredFieldsValid()
+        {
+            return !string.IsNullOrEmpty(ClientNameTextBox.Text) &&
+                   !string.IsNullOrEmpty(SerialNumberTextBox.Text) &&
+                   !string.IsNullOrEmpty(DeviceTextBox.Text) &&
+                   !string.IsNullOrEmpty(ObservationsTextBox.Text); /*&&
+                   DateTime.TryParse(ServiceDatePicker.SelectedDate, out _);*/
+        }
+
+        private void UpdateWarrantyFromUI(Warranty warranty)
+        {
+            warranty.Customer = ClientNameTextBox.Text;
+            warranty.OsCode = OsCodeTextBox.Text;
+            warranty.SerialNumber = SerialNumberTextBox.Text;
+            warranty.Device = DeviceTextBox.Text;
+            warranty.ServiceDate = ServiceDatePicker.SelectedDate ?? DateTime.Now;
+            warranty.Observation = ObservationsTextBox.Text;
+            warranty.WarrantyEndDate = warranty.ServiceDate.AddMonths(warranty.WarrantyMonths);
+        }
+
+        private void HighlightEmptyFields()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+
+                ClientNameTextBox.BorderBrush = string.IsNullOrEmpty(ClientNameTextBox.Text)
+                    ? Brushes.Blue : Brushes.Red;
+
+                ClientNameTextBox.BorderBrush = string.IsNullOrEmpty(SerialNumberTextBox.Text)
+                    ? Brushes.Blue : Brushes.Red;
+
+                ClientNameTextBox.BorderBrush = string.IsNullOrEmpty(DeviceTextBox.Text)
+                    ? Brushes.Blue : Brushes.Red;
+
+                ClientNameTextBox.BorderBrush = string.IsNullOrEmpty(ObservationsTextBox.Text)
+                    ? Brushes.Blue : Brushes.Red;
+            });
         }
     }
 } 

@@ -12,9 +12,12 @@ namespace NeuroApp.Interfaces
         ICommand ShowSupportGuideCommand { get; }
         ICommand ShowWarrantyScreenCommand { get; }
         ICommand ShowObservationsCommand { get; }
+        ICommand ClosePopupCommand { get; }
 
         object CurrentView { get; set; }
         ObservableCollection<Sales> Sales { get; }
+        Sales SelectedSale { get; set; }
+        bool IsPopupOpen { get; set; }
         ResponsiveBigButtons ResponsiveBigButtons { get; set; }
 
         void ShowHomeScreen();

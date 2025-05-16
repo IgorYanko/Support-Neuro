@@ -14,7 +14,6 @@ using NeuroApp.Classes;
 using NeuroApp.Interfaces;
 using NeuroApp.Views;
 using System.Windows.Threading;
-using System.Collections.Specialized;
 
 namespace NeuroApp
 {
@@ -41,9 +40,6 @@ namespace NeuroApp
             _draggedRow = null;
             InitializeTimer();
             DataContext = mainViewModel;
-
-            DataGridSales.Loaded += (s, e) => UpdateItemsControl();
-            DataGridSales.SizeChanged += (s, e) => UpdateItemsControl();
         }
 
         public async Task ProcessSalesDataAsync()
@@ -258,62 +254,6 @@ namespace NeuroApp
 
         private bool _isSyncingScroll = false;
 
-        private void DataGridSales_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            //if (_isLoading || _isSyncingScroll) return;
-
-            //_isSyncingScroll = true;
-            //try
-            //{
-            //    var dataGridScrollViewer = DependencyObjectExtensions.FindVisualChild<ScrollViewer>(DataGridSales);
-            //    if (dataGridScrollViewer != null && ScrollViewerObservations != null)
-            //    {
-            //        if (dataGridScrollViewer.ScrollableHeight > 0 && ScrollViewerObservations.ScrollableHeight > 0)
-            //        {
-            //            double dataGridScrollRatio = dataGridScrollViewer.VerticalOffset / dataGridScrollViewer.ScrollableHeight;
-            //            double itemsControlScrollPosition = dataGridScrollRatio * (ScrollViewerObservations.ScrollableHeight);
-
-            //            if (!double.IsNaN(itemsControlScrollPosition))
-            //            {
-            //                ScrollViewerObservations.ScrollToVerticalOffset(itemsControlScrollPosition);
-            //            }
-            //        }
-            //    }
-            //}
-            //finally
-            //{
-            //    _isSyncingScroll = false;
-            //}
-        }
-
-        private void ScrollViewerObservations_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            //if (_isLoading || _isSyncingScroll) return;
-
-            //_isSyncingScroll = true;
-            //try
-            //{
-            //    var dataGridScrollViewer = DependencyObjectExtensions.FindVisualChild<ScrollViewer>(DataGridSales);
-            //    if (dataGridScrollViewer != null && sender is ScrollViewer scrollViewer)
-            //    {
-            //        if (scrollViewer.ScrollableHeight > 0 && dataGridScrollViewer.ScrollableHeight > 0)
-            //        {
-            //            double itemsControlScrollRatio = scrollViewer.VerticalOffset / scrollViewer.ScrollableHeight;
-            //            double dataGridScrollPosition = itemsControlScrollRatio * ScrollViewerObservations.ScrollableHeight;
-
-            //            if (!double.IsNaN(dataGridScrollPosition))
-            //            {
-            //                dataGridScrollViewer.ScrollToVerticalOffset(dataGridScrollPosition);
-            //            }
-            //        }
-            //    }
-            //}
-            //finally
-            //{
-            //    _isSyncingScroll = false;
-            //}
-        }
-
         private void DataGridSales_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
         {
             if (e.Column.Header?.ToString() == "Status" && e.Row.Item is Sales selectedRow)
@@ -338,8 +278,40 @@ namespace NeuroApp
 
         private void DataGridSales_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.OriginalSource is DependencyObject source)
+            if (e.OriginalSource is DependencyObject originalSource)
             {
+                DependencyObject current = originalSource;
+                while (current != null && !(current is DataGridCell))
+                {
+                    current = VisualTreeHelper.GetParent(current);
+                }
+
+                if (current is DataGridCell cell && cell.Column?.Header?.ToString() == "Obs")
+                {
+                    Button button = FindButtonInVisualTree(cell);
+                    if (button != null)
+                    {
+                        if (cell.DataContext is Sales sale && sale != null)
+                        {
+                            _mainViewModel.SelectedSale = sale;
+
+                            if (!string.IsNullOrWhiteSpace(_mainViewModel.SelectedSale.Observation))
+                            {
+                                ObservationPopUp.DataContext = sale;
+                                ObservationPopUp.PlacementTarget = button;
+                                ObservationPopUp.Placement = PlacementMode.Top;
+                                ObservationPopUp.VerticalOffset = -10;
+                                ObservationPopUp.IsOpen = true;
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("Erro!");
+                        }
+                    }
+                }
+
+                var source = originalSource;
                 while (source != null)
                 {
                     if (source is ScrollBar)
@@ -361,6 +333,25 @@ namespace NeuroApp
                 _draggedRow = row;
                 _isScrolling = false;
             }
+        }
+
+        private Button FindButtonInVisualTree(DependencyObject parent)
+        {
+            if (parent == null)
+                return null;
+
+            if (parent is Button button)
+                return button;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                var result = FindButtonInVisualTree(child);
+                if (result != null)
+                    return result;
+            }
+
+            return null;
         }
 
         private void DataGridSales_MouseMove(object sender, MouseEventArgs e)
@@ -464,76 +455,92 @@ namespace NeuroApp
 
         private async void RemoveOs_Click(object sender, RoutedEventArgs e)
         {
-            var selectedSale = DataGridSales.SelectedItem as Sales;
-
-            if (selectedSale != null)
+            if (!(DataGridSales.SelectedItem is Sales selectedSale))
             {
-                var result = MessageBox.Show(
+                MessageBox.Show("Nenhuma OS selecionada.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var warrantyResult = MessageBox.Show(
                     "Deseja criar uma garantia para esta OS?",
                     "Remover OS",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
 
-                if (result == MessageBoxResult.Yes)
+                if (warrantyResult == MessageBoxResult.Yes)
                 {
-                    var warranty = new Warranty
-                    {
-                        OsCode = selectedSale.Code,
-                        ClientName = selectedSale.PersonName,
-                        ServiceDate = DateTime.Now,
-                        WarrantyMonths = 3
-                    };
-
-                    var dialog = new WarrantyDetailsDialog(warranty, _configuration);
-                    var dialogResult = dialog.ShowDialog();
-
-                    if (dialogResult == true)
-                    {
-                        try
-                        {
-                            DatabaseActions databaseActions = new(_configuration);
-                            databaseActions.RemoveOs(selectedSale.Code);
-
-                            await Application.Current.Dispatcher.InvokeAsync(() =>
-                            {
-                                SalesData.Remove(selectedSale);
-                                MessageBox.Show("OS removida e garantia registrada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Erro ao remover OS: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
+                    await HandleWarrantyCreation(selectedSale);
                 }
                 else
                 {
-                    var confirmResult = MessageBox.Show(
-                        "Tem certeza que deseja remover a OS sem criar garantia?",
-                        "Confirmar Remoção",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Warning);
-
-                    if (confirmResult == MessageBoxResult.Yes)
-                    {
-                        try
-                        {
-                            DatabaseActions databaseActions = new(_configuration);
-                            databaseActions.RemoveOs(selectedSale.Code);
-
-                            await Application.Current.Dispatcher.InvokeAsync(() =>
-                            {
-                                SalesData.Remove(selectedSale);
-                                MessageBox.Show("OS removida com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Erro ao remover OS: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
+                    await ConfirmAndRemoveOs(selectedSale);
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao processar a solicitação: {ex.Message}",
+                               "Erro",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Error);
+            }                                 
+        }
+
+        private async Task HandleWarrantyCreation(Sales selectedSale)
+        {
+            var warranty = new Warranty
+            {
+                OsCode = selectedSale.Code,
+                Customer = selectedSale.PersonName,
+                ServiceDate = DateTime.Now,
+                WarrantyMonths = 3
+            };
+
+            var dialog = new WarrantyDetailsDialog(warranty, _configuration);
+
+            if (dialog.ShowDialog() == true)
+            {
+                await RemoveOsAndUpdateUI(selectedSale.Code, selectedSale);
+                MessageBox.Show("OS removida e garantia registrada com sucesso!",
+                               "Sucesso",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Information);
+            }
+        }
+
+        private async Task ConfirmAndRemoveOs(Sales selectedSale)
+        {
+            var confirmResult = MessageBox.Show(
+                "Tem certeza que deseja remover a OS sem criar garantia?",
+                "Confirmação Remoção",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirmResult == MessageBoxResult.Yes)
+            {
+                await RemoveOsAndUpdateUI(selectedSale.Code, selectedSale);
+                MessageBox.Show("OS removida com sucesso!",
+                               "Sucesso",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Information);
+            }
+        }
+
+        private async Task RemoveOsAndUpdateUI(string osCode, Sales saleToRemove)
+        {
+            var databaseActions = new DatabaseActions(_configuration);
+            var success = await databaseActions.RemoveOsAsync(osCode);
+
+            if (!success)
+            {
+                throw new InvalidOperationException("Falha ao remover a OS. Registro não encontrado");
+            }
+
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                SalesData.Remove(saleToRemove);
+            });
         }
 
         private async void PauseOs_Click(object sender, RoutedEventArgs e)
@@ -585,6 +592,7 @@ namespace NeuroApp
                     {
                         row = DependencyObjectExtensions.FindAncestor<DataGridRow>(target);
                     }
+
                     if (row == null)
                     {
                         var dataGrid = DependencyObjectExtensions.FindAncestor<DataGrid>(target);
@@ -693,86 +701,18 @@ namespace NeuroApp
             _mainViewModel.ShowHomeScreen();
         }
 
-        private void UpdateListBoxItemHeights()
-        {
-            //if (_isLoading || DataGridSales == null || ItemsControlButton == null) return;
-
-            //Dispatcher.BeginInvoke(() =>
-            //{
-            //    try
-            //    {
-            //        int itemCount = Math.Min(DataGridSales.Items.Count, ItemsControlButton.Items.Count);
-
-            //        for (int i = 0; i < itemCount; i++)
-            //        {
-            //            var dataGridRow = GetContainerSafely<DataGridRow>(DataGridSales, i);
-            //            var contentPresenter = GetContainerSafely<ContentPresenter>(ItemsControlButton, i);
-
-            //            if (dataGridRow != null && contentPresenter != null)
-            //            {
-            //                contentPresenter.Height = dataGridRow.ActualHeight;
-            //                var button = DependencyObjectExtensions.FindVisualChild<Button>(contentPresenter);
-            //                if (button != null)
-            //                {
-            //                    button.Height = dataGridRow.ActualHeight * 0.5;
-            //                    button.Width = button.Height;
-            //                }
-            //            }
-            //        }
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        MessageBox.Show($"Erro ao atualizar alturas: {ex.Message}");
-            //    }
-            //}, DispatcherPriority.Background);
-        }
-
-        private void UpdateListBoxPadding()
-        {
-            //if (DataGridSales == null || ScrollViewerObservations == null) return;
-
-            //ScrollViewerObservations.Margin = new Thickness(0, 52, 0, 0);
-        }
-
-        private void UpdateItemsControl()
-        {
-            UpdateListBoxItemHeights();
-            UpdateListBoxPadding();
-        }
-
-        private T GetContainerSafely<T>(ItemsControl control, int index) where T : DependencyObject
-        {
-            try
-            {
-                if (index >= 0 && index < control.Items.Count)
-                {
-                    return control.ItemContainerGenerator.ContainerFromIndex(index) as T;
-                }
-            }
-            catch
-            {
-                throw;
-            }
-            return null;
-        }
-
         public void OpenPopup(object sender, RoutedEventArgs e)
         {
             if (sender is Button button && button.DataContext is Sales sale)
             {
                 if (!string.IsNullOrEmpty(sale.Observation))
                 {
-                    //ObservationPopUp.DataContext = sale;
-                    //ObservationPopUp.PlacementTarget = button;
-                    //ObservationPopUp.Placement = PlacementMode.Top;
-                    //ObservationPopUp.VerticalOffset = -10;
-                    //ObservationPopUp.IsOpen = true;
-
+                    ObservationPopUp.DataContext = sale;
                     ObservationPopUp.PlacementTarget = button;
+                    ObservationPopUp.Placement = PlacementMode.Top;
+                    ObservationPopUp.VerticalOffset = -10;
                     ObservationPopUp.IsOpen = true;
 
-                    var vm = DataContext as Sales;
-                    
                 }
                 else
                 {
@@ -783,28 +723,11 @@ namespace NeuroApp
             {
                 MessageBox.Show("Erro!");
             }
-
-            //PopupText.Text = button.DataContext as string;
         }
 
         private void ClosePopupButton_Click(object sender, RoutedEventArgs e)
         {
             ObservationPopUp.IsOpen = false;
-        }
-
-        private void ObservationButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is Button button && button.DataContext is Sales item)
-            {
-                var vm = DataContext as MainViewModel;
-                if (vm != null)
-                {
-                    vm.SelectedSale = item;
-                    ObservationPopUp.PlacementTarget = button;
-                    ObservationPopUp.IsOpen = true;
-                    e.Handled = true;
-                }
-            }
         }
     }
 }

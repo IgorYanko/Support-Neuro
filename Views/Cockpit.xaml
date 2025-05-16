@@ -84,7 +84,7 @@
 
             <Popup x:Name="ObservationPopUp"
                    IsOpen="{Binding IsPopupOpen, Mode=TwoWay}"
-                   StaysOpen="False"
+                   StaysOpen="True"
                    AllowsTransparency="True"
                    Placement="Bottom"
                    PopupAnimation="Slide"
@@ -136,7 +136,7 @@
                       Style="{DynamicResource MaterialDesignDataGrid}"
                       RowBackground="{DynamicResource MaterialDesignBackground}"
                       AlternatingRowBackground="#F5F5F5"
-                      CanUserReorderColumns="False"           
+                      CanUserReorderColumns="False"
                       CanUserSortColumns="False"
                       CanUserResizeColumns="False"
                       CanUserResizeRows="False"
@@ -147,7 +147,6 @@
                       VerticalAlignment="Stretch"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
-                      ScrollViewer.ScrollChanged="DataGridSales_ScrollChanged"
                       Loaded="UserControl_Loaded"
                       Unloaded="UserControl_Unloaded"
                       DragOver="DataGridSales_DragOver"
@@ -210,17 +209,15 @@
                 </DataGrid.RowStyle>
 
                 <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="Obs" Width="40" MinWidth="40">
+                    <DataGridTemplateColumn Header="Obs" Width="60" MinWidth="60">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button x:Name="ObservationButton"
-                                        Content="📝"
                                         Width="30"
                                         Margin="5 0"
                                         IsHitTestVisible="True"
                                         CommandParameter="{Binding}"
-                                        PreviewMouseLeftButtonDown="ObservationButton_PreviewMouseLeftButtonDown"
-                                       
+                                        Command="{Binding DataContext.ShowObservationsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         VerticalAlignment="Center"
                                         HorizontalAlignment="Center">
                                     <Button.Style>
@@ -239,6 +236,10 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Button.Style>
+								
+							        <mat:PackIcon Kind="Close" 
+                                                  Width="20" Height="20"
+                                                  VerticalAlignment="Center"/>
                                 </Button>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>

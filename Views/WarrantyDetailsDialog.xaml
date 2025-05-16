@@ -43,7 +43,7 @@
                       Margin="0,0,0,16">
             <StackPanel>
                 <TextBox x:Name="ClientNameTextBox"
-                         materialDesign:HintAssist.Hint="Nome do Cliente"
+                         materialDesign:HintAssist.Hint="Nome do Cliente *"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          Margin="0,8"/>
 
@@ -52,22 +52,34 @@
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
                 <TextBox x:Name="SerialNumberTextBox"
-                         materialDesign:HintAssist.Hint="Número de Série"
+                         materialDesign:HintAssist.Hint="Número de Série *"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          Margin="0,8"/>
 
-                <TextBox x:Name="DeviceTextBox"
-                         materialDesign:HintAssist.Hint="Aparelho"
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Margin="0,8"/>
+                <ComboBox x:Name="DeviceTextBox"
+                         materialDesign:HintAssist.Hint="Aparelho *"
+                         Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                         Margin="0,8">
+                    <ComboBoxItem Content="Video Frenzel"/>
+                    <ComboBoxItem Content="VD 360"/>
+                    <ComboBoxItem Content="Sivec Plus Vx"/>
+                    <ComboBoxItem Content="Sivec Plus Ex"/>
+                    <ComboBoxItem Content="OTO VM"/>
+                    <ComboBoxItem Content="OAT 10 Plus"/>
+                    <ComboBoxItem Content="OTO New"/>
+                    <ComboBoxItem Content="OTO 3D"/>
+                    <ComboBoxItem Content="Veng"/>
+                    <ComboBoxItem Content="Vecwin STM"/>
+                    <ComboBoxItem Content="Vecto VM"/>
+                </ComboBox>
 
                 <DatePicker x:Name="ServiceDatePicker"
-                           materialDesign:HintAssist.Hint="Data do Serviço"
+                           materialDesign:HintAssist.Hint="Data do Serviço *"
                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"
                            Margin="0,8"/>
 
                 <ComboBox x:Name="WarrantyTypeComboBox"
-                          materialDesign:HintAssist.Hint="Tipo de Garantia"
+                          materialDesign:HintAssist.Hint="Tipo de Garantia *"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
                           Margin="0,8"
                           SelectionChanged="WarrantyTypeComboBox_SelectionChanged">
@@ -82,7 +94,7 @@
                          IsReadOnly="True"/>
 
                 <TextBox x:Name="ObservationsTextBox"
-                         materialDesign:HintAssist.Hint="Observações"
+                         materialDesign:HintAssist.Hint="Descrição do serviço *"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          TextWrapping="Wrap"
                          AcceptsReturn="True"

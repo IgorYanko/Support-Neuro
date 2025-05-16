@@ -30,17 +30,47 @@ namespace NeuroApp.Views
         {
             string observationText = ObservationTextBox.Text;
             DatabaseActions databaseActions = new(_configuration);
-            
-            var observationOperation = await databaseActions.AddObservationsAsync(observationText, _osCode);
 
-            if (observationOperation)
+            if (!string.IsNullOrWhiteSpace(observationText))
             {
-                MessageBox.Show("Observação adicionada com sucesso!", "Observação adicionada", MessageBoxButton.OK, MessageBoxImage.Information);
-                IsConfirmed = true;
+                var observationOperation = await databaseActions.AddObservationsAsync(observationText, _osCode);
+
+                if (observationOperation)
+                {
+                    MessageBox.Show("Observação adicionada com sucesso!", "Observação adicionada", MessageBoxButton.OK, MessageBoxImage.Information);
+                    IsConfirmed = true;
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("Essa observação já foi adicionada!", "Observação repetida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Não é possível adicionar uma observação vazia!", "Observação vazia!", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async void RemoveObservationButton_Click(object sender, RoutedEventArgs e)
+        {
+            DatabaseActions databaseActions = new(_configuration);
+            var removeObservationOperation = await databaseActions.AddObservationsAsync(null, _osCode);
+
+            if (removeObservationOperation)
+            {
+                MessageBox.Show("Observação removida com sucesso!", "Observação removida", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 this.Close();
             }
             else
-                MessageBox.Show("Essa observação já foi adicionada!", "Observação repetida", MessageBoxButton.OK, MessageBoxImage.Warning);
+            {
+                MessageBox.Show("Falha ao remover observação!", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnExit_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 }

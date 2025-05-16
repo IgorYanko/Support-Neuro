@@ -6,7 +6,7 @@ namespace NeuroApp.Classes
     {
         public int Id { get; set; }
         public string? OsCode { get; set; }
-        public string ClientName { get; set; }
+        public string Customer { get; set; }
         public string SerialNumber { get; set; }
         public string Device { get; set; }
         public DateTime ServiceDate { get; set; }

@@ -170,7 +170,7 @@
             </DataGrid.RowStyle>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Cliente" 
-                                  Binding="{Binding ClientName}"
+                                  Binding="{Binding Customer}"
                                   Width="*"
                                   IsReadOnly="True">
                     <DataGridTextColumn.ElementStyle>

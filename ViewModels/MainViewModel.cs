@@ -21,6 +21,10 @@ namespace NeuroApp
         public ICommand GoBackCommand { get; }
         public ICommand ShowSupportGuideCommand { get; }
         public ICommand ShowWarrantyScreenCommand { get; }
+        public ICommand ShowObservationsCommand { get; }
+        public ICommand ShowCockpitScreen { get; }
+        public ICommand ShowCustomersScreen { get; }
+        public ICommand ClosePopupCommand { get; }
 
         private ResponsiveBigButtons _responsiveBigButtons = new();
         public ResponsiveBigButtons ResponsiveBigButtons
@@ -36,34 +40,11 @@ namespace NeuroApp
             set => SetProperty(ref _currentView, value);
         }
 
-        private ObservableCollection<Sales> _sales;
+        private ObservableCollection<Sales> _sales = new();
         public ObservableCollection<Sales> Sales
         {
             get => _sales;
-            set => SetProperty(ref _sales, value);
-        }
-
-        public ICommand ShowObservationsCommand { get; }
-        public ICommand ShowCockpitScreen { get; }
-        public ICommand ShowCustomersScreen { get; }
-
-        public MainViewModel(IApiService apiService, IConfiguration configuration)
-        {
-            _apiService = apiService;
-            _configuration = configuration;
-
-            GoBackCommand = new RelayCommand(
-                ShowHomeScreen,
-                () => CurrentView != null
-            );
-
-            ShowCockpitScreen = new RelayCommand(() => CurrentView = new Cockpit(this, _configuration));
-            ShowCustomersScreen = new RelayCommand(() => CurrentView = new Screens.Customers());
-            ShowSupportGuideCommand = new RelayCommand(() => CurrentView = new SupportGuideScreen(_configuration, this));
-            ShowWarrantyScreenCommand = new RelayCommand(() => CurrentView = new WarrantyScreen(this, _configuration));
-            ShowObservationsCommand = new RelayCommand<Sales>(ShowObservations);
-
-            ShowHomeScreen();
+            set { _sales = value; OnPropertyChanged(nameof(Sales)); }
         }
 
         private Sales _selectedSale;
@@ -86,6 +67,26 @@ namespace NeuroApp
                 _isPopupOpen = value;
                 OnPropertyChanged(nameof(IsPopupOpen));
             }
+        }
+
+        public MainViewModel(IApiService apiService, IConfiguration configuration)
+        {
+            _apiService = apiService;
+            _configuration = configuration;
+
+            GoBackCommand = new RelayCommand(
+                ShowHomeScreen,
+                () => CurrentView != null
+            );
+
+            ShowCockpitScreen = new RelayCommand(() => CurrentView = new Cockpit(this, _configuration));
+            ShowCustomersScreen = new RelayCommand(() => CurrentView = new Screens.Customers());
+            ShowSupportGuideCommand = new RelayCommand(() => CurrentView = new SupportGuideScreen(_configuration, this));
+            ShowWarrantyScreenCommand = new RelayCommand(() => CurrentView = new WarrantyScreen(this, _configuration));
+            ShowObservationsCommand = new RelayCommand<Sales>(ShowObservations);
+            //ClosePopupCommand = new RelayCommand(_ => IsPopupOpen = false);
+
+            ShowHomeScreen();
         }
 
         private void ShowObservations(Sales sale)

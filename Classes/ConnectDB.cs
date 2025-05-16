@@ -1,12 +1,7 @@
 ﻿using Npgsql;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Security;
 using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Extensions.Configuration;
 
@@ -18,11 +13,11 @@ namespace NeuroApp.Classes
 
         public ConnectDB(IConfiguration configuration)
         {
-            var serverName = configuration.GetValue<string>("Database:Server") ?? "127.0.0.1";
-            var port = configuration.GetValue<string>("Database:Port") ?? "5432";
+            var serverName = configuration.GetValue<string>("Database:Server") ?? "tramway.proxy.rlwy.net";
+            var port = configuration.GetValue<string>("Database:Port") ?? "37729";
             var userName = configuration.GetValue<string>("Database:Username") ?? "postgres";
-            var password = configuration.GetValue<string>("Database:Password") ?? "Sivec@20";
-            var databaseName = configuration.GetValue<string>("Database:Name") ?? "NeuroApp";
+            var password = configuration.GetValue<string>("Database:Password") ?? "JQPvHjATtKkuhdGPGUpnOIBOnJYRLHMb";
+            var databaseName = configuration.GetValue<string>("Database:Name") ?? "railway";
 
             _connectionString = new NpgsqlConnectionStringBuilder
             {
@@ -31,8 +26,9 @@ namespace NeuroApp.Classes
                 Username = userName,
                 Password = password,
                 Database = databaseName,
-                SslMode = SslMode.Disable,
+                SslMode = SslMode.Prefer,
             }.ConnectionString;
+
         }
 
         public string ConnectionString => _connectionString;
@@ -44,25 +40,23 @@ namespace NeuroApp.Classes
         {
         }
 
-        public async Task<(bool IsAuthenticated, string UserRole)> UserLoginAsync(string username, string password)
+        public async Task<(bool IsAuthenticated, string UserRole)> UserLoginAsync(string username, string acess_code)
         {
             try
             {
                 await using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
-                string hashedPassword = HashPassword(password);
-
                 await using var cmd = new NpgsqlCommand(
-                    @"SELECT role_ FROM users WHERE username = @username AND password_ = @password", connection);
+                    @"SELECT permission_level FROM users WHERE username = @username AND acess_code = @acess_code", connection);
 
                 cmd.Parameters.AddWithValue("username", username);
-                cmd.Parameters.AddWithValue("password", hashedPassword);
+                cmd.Parameters.AddWithValue("acess_code", acess_code);
 
                 await using var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
-                    return (true, reader["role_"].ToString() ?? "generic");
+                    return (true, reader["permission_level"].ToString() ?? "medium");
                 }
             }
             catch (NpgsqlException ex)
@@ -77,13 +71,6 @@ namespace NeuroApp.Classes
             }
 
             return (false, "generic");
-        }
-
-        private static string HashPassword(string password)
-        {
-            using var sha256 = System.Security.Cryptography.SHA256.Create();
-            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(bytes);
         }
 
         private string GetEnumJsonValue<T>(T enumValue) where T : Enum
@@ -140,8 +127,8 @@ namespace NeuroApp.Classes
 
         private async Task DeleteExistingTagsForSaleAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string osCode)
         {
-            var command = new NpgsqlCommand("DELETE FROM salestags WHERE oscode = @osCode", connection, transaction);
-            command.Parameters.AddWithValue("@osCode", osCode);
+            var command = new NpgsqlCommand("DELETE FROM sales_tags WHERE os_number = @os_number", connection, transaction);
+            command.Parameters.AddWithValue("@os_number", osCode);
             await command.ExecuteNonQueryAsync();
         }
 
@@ -152,10 +139,10 @@ namespace NeuroApp.Classes
                 using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
-                var query = "SELECT COUNT(*) FROM serviceorders WHERE numos = @osCode";
+                var query = "SELECT COUNT(*) FROM service_orders WHERE os_number = @os_number";
 
                 using var command = new NpgsqlCommand(query, connection);
-                command.Parameters.AddWithValue("@osCode", osCode);
+                command.Parameters.AddWithValue("@os_number", osCode);
 
                 int count = Convert.ToInt32(await command.ExecuteScalarAsync());
                 return count > 0;
@@ -170,9 +157,9 @@ namespace NeuroApp.Classes
         private async Task<(string status, DateTime? approvedAt)> GetCurrentStatusAsync(NpgsqlConnection connection, string code)
         {
             const string selectQuery = @"
-                SELECT status, approvedat
-                FROM serviceorders
-                WHERE numos = @numeroOs";
+                SELECT status, approved_date
+                FROM service_orders
+                WHERE os_number = @numeroOs";
 
             await using var selectCommand = new NpgsqlCommand(selectQuery, connection);
             selectCommand.Parameters.AddWithValue("numeroOs", code);
@@ -181,7 +168,7 @@ namespace NeuroApp.Classes
             if (await reader.ReadAsync())
             {
                 string status = GetValueOrDefault(reader["status"], "Unknown");
-                DateTime? approvedAt = reader["approvedat"] as DateTime?;
+                DateTime? approvedAt = reader["approved_date"] as DateTime?;
 
                 return (status, approvedAt);
             }
@@ -192,33 +179,34 @@ namespace NeuroApp.Classes
         private async Task InsertOrUpdateServiceOrdersAsync(NpgsqlConnection connection, Sales sale, DateTime? approvedAt, DateTime? deadline)
         {
             string insertQuery = @"
-                INSERT INTO serviceorders (customer, numos, arrivaldate, ostype, observations, status, approvedat, deadline, ismanual)
-                VALUES (@cliente, @numeroOs, @dataChegada, @ostype, @observacao, @status, @approvedAt, @deadline, @isManual)
-                ON CONFLICT (numos) DO UPDATE
+                INSERT INTO service_orders (customer, os_number, arrival_date, os_type, observations, status, approved_date, deadline, is_manual, excluded)
+                VALUES (@customer, @os_number, @arrival_date, @os_type, @observations, @status, @approved_date, @deadline, @is_manual, @excluded)
+                ON CONFLICT (os_number) DO UPDATE
                 SET status = EXCLUDED.status,
-                    approvedat = CASE
-                        WHEN serviceorders.status != 'Aprovado' AND EXCLUDED.status = 'Aprovado' THEN EXCLUDED.approvedat
-                        ELSE serviceorders.approvedat
+                    approved_date = CASE
+                        WHEN service_orders.status != 'Aprovado' AND EXCLUDED.status = 'Aprovado' THEN EXCLUDED.approved_date
+                        ELSE service_orders.approved_date
                     END,
                     deadline = CASE
-                        WHEN serviceorders.status != 'Aprovado' AND EXCLUDED.status = 'Aprovado' THEN EXCLUDED.deadline
-                        ELSE serviceorders.deadline
+                        WHEN service_orders.status != 'Aprovado' AND EXCLUDED.status = 'Aprovado' THEN EXCLUDED.deadline
+                        ELSE service_orders.deadline
                     END,
-                    ismanual = EXCLUDED.ismanual;";
+                    is_manual = EXCLUDED.is_manual;";
 
             using (var insertCommand = new NpgsqlCommand(insertQuery, connection))
             {
                 insertCommand.Parameters.AddRange(new[]
                 {
-                    new NpgsqlParameter("cliente", sale.PersonRazao ?? sale.PersonName),
-                    new NpgsqlParameter("numeroOs", sale.Code),
-                    new NpgsqlParameter("dataChegada", sale.DateCreated),
-                    new NpgsqlParameter("ostype", GetEnumJsonValue(sale.Type)),
-                    new NpgsqlParameter("observacao", sale.Observation ?? (object)DBNull.Value),
+                    new NpgsqlParameter("customer", sale.PersonRazao ?? sale.PersonName),
+                    new NpgsqlParameter("os_number", sale.Code),
+                    new NpgsqlParameter("arrival_date", sale.DateCreated),
+                    new NpgsqlParameter("os_type", GetEnumJsonValue(sale.Type)),
+                    new NpgsqlParameter("observations", sale.Observation ?? (object)DBNull.Value),
                     new NpgsqlParameter("status", sale.Status.ToString()),
-                    new NpgsqlParameter("approvedAt", approvedAt ?? (object)DBNull.Value),
+                    new NpgsqlParameter("approved_date", approvedAt ?? (object)DBNull.Value),
                     new NpgsqlParameter("deadline", deadline ?? (object)DBNull.Value),
-                    new NpgsqlParameter("isManual", sale.IsManual)
+                    new NpgsqlParameter("is_manual", sale.IsManual),
+                    new NpgsqlParameter("excluded", sale.Excluded)
                 });
 
                 await insertCommand.ExecuteNonQueryAsync();
@@ -236,14 +224,14 @@ namespace NeuroApp.Classes
 
                 var query = @"
                               SELECT *,
-                                  COALESCE(approvedat, '1970-01-01') AS approvedat_fallback,
-                                  COALESCE(arrivaldate, '1970-01-01') AS arrivaldate_fallback,
-                                  COALESCE(pauseddate, '1970-01-01') AS pauseddate_fallback,
-                                  COALESCE(quotationdate, NULL) AS quotationdate_fallback
-                              FROM serviceorders
+                                  COALESCE(approved_date, '1970-01-01') AS approved_date_fallback,
+                                  COALESCE(arrival_date, '1970-01-01') AS arrival_date_fallback,
+                                  COALESCE(paused_date, '1970-01-01') AS paused_date_fallback,
+                                  COALESCE(quotation_date, NULL) AS quotation_date_fallback
+                              FROM service_orders
                               WHERE 
                                    status != 'Faturado'
-                                   OR (status = 'Faturado' AND ostype = 'Venda' );";
+                                   OR (status = 'Faturado' AND os_type = 'Venda' );";
 
                 using var command = new NpgsqlCommand(query, connection);
                 using var reader = await command.ExecuteReaderAsync();
@@ -289,7 +277,7 @@ namespace NeuroApp.Classes
             {
                 await npgsqlConnection.OpenAsync();
 
-                string selectQuery = "SELECT observations FROM serviceorders WHERE numos = @numeroOs";
+                string selectQuery = "SELECT observations FROM service_orders WHERE os_number = @numeroOs";
                 await using var selectCommand = new NpgsqlCommand(selectQuery, npgsqlConnection);
                 selectCommand.Parameters.AddWithValue("numeroOs", numeroOs);
 
@@ -300,7 +288,7 @@ namespace NeuroApp.Classes
                     return false;
                 }
 
-                string obsQuery = "UPDATE serviceorders SET observations = @observation WHERE numos = @numeroOS";
+                string obsQuery = "UPDATE service_orders SET observations = @observation WHERE os_number = @numeroOS";
                 await using var updateCommand = new NpgsqlCommand(obsQuery, npgsqlConnection);
                 updateCommand.Parameters.AddWithValue("observation", (object?)obsText ?? DBNull.Value);
                 updateCommand.Parameters.AddWithValue("numeroOs", numeroOs);
@@ -377,18 +365,18 @@ namespace NeuroApp.Classes
         {
             var sale = new Sales
             {
-                Code = GetValueOrDefault(reader["numos"], string.Empty),
-                DateCreated = GetNullableDateTime(reader["arrivaldate"]) ?? DateTime.MinValue,
+                Code = GetValueOrDefault(reader["os_number"], string.Empty),
+                DateCreated = GetNullableDateTime(reader["arrival_date"]) ?? DateTime.MinValue,
                 Observation = GetValueOrDefault(reader["observations"], string.Empty),
                 PersonName = GetValueOrDefault(reader["customer"], string.Empty),
                 PersonRazao = GetValueOrDefault(reader["customer"], string.Empty),
                 Tags = new List<Tag>(),
-                DisplayType = MapToSaleType(GetValueOrDefault(reader["ostype"], "Unknown")),
+                DisplayType = MapToSaleType(GetValueOrDefault(reader["os_type"], "Unknown")),
                 DisplayStatus = MapToSaleStatus(GetValueOrDefault(reader["status"], "Unknown")),
-                IsPaused = reader["pausedDate"] != DBNull.Value,
-                IsManual = GetNulableBool(reader["ismanual"]) ?? false,
-                ApprovedAt = GetNullableDateTime(reader["approvedat"]),
-                QuotationDate = GetNullableDateTime(reader["quotationdate_fallback"]),
+                IsPaused = reader["paused_date"] != DBNull.Value,
+                IsManual = GetNulableBool(reader["is_manual"]) ?? false,
+                ApprovedAt = GetNullableDateTime(reader["approved_date"]),
+                QuotationDate = GetNullableDateTime(reader["quotation_date_fallback"]),
                 Excluded = reader["excluded"] != DBNull.Value && (bool)reader["excluded"]
             };
 
@@ -397,11 +385,11 @@ namespace NeuroApp.Classes
                 sale.Deadline = BusinessDayCalculator.CalculateDeadline(sale.ApprovedAt.Value);
             }
 
-            if (reader["tagid"] != DBNull.Value && !string.IsNullOrEmpty(reader["tagid"].ToString()))
+            if (reader["tag_id"] != DBNull.Value && !string.IsNullOrEmpty(reader["tag_id"].ToString()))
             {
                 sale.Tags.Add(new Tag
                 {
-                    TagId = reader["tagid"].ToString()
+                    TagId = reader["tag_id"].ToString()
                 });
             }
 
@@ -410,14 +398,13 @@ namespace NeuroApp.Classes
 
         public async Task SaveTagForOSAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string osCode, string tagId)
         {
-
             var query = @"
-                INSERT INTO salestags (oscode, tagid)
-                VALUES (@OSCode, @tagId)
+                INSERT INTO sales_tags (os_number, tag_id)
+                VALUES (@os_number, @tagId)
                 ON CONFLICT DO NOTHING";
 
             var command = new NpgsqlCommand(query, connection, transaction);
-            command.Parameters.AddWithValue("@OSCode", osCode);
+            command.Parameters.AddWithValue("@os_number", osCode);
             command.Parameters.AddWithValue("@tagId", tagId);
 
             await command.ExecuteNonQueryAsync();
@@ -432,17 +419,17 @@ namespace NeuroApp.Classes
                 using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
-                string query = "SELECT tagid FROM salestags WHERE oscode = @OsCode";
+                string query = "SELECT tag_id FROM sales_tags WHERE os_number = @os_number";
 
                 using var command = new NpgsqlCommand(query, connection);
-                command.Parameters.AddWithValue("@OsCode", osCode);
+                command.Parameters.AddWithValue("@os_number", osCode);
 
                 using var reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     tags.Add(new Tag
                     {
-                        TagId = reader["tagid"].ToString()
+                        TagId = reader["tag_id"].ToString()
                     });
                 }
             }
@@ -454,31 +441,55 @@ namespace NeuroApp.Classes
             return tags;
         }
 
-        public async Task RemoveOs(string osCode)
+        public async Task<bool> RemoveOsAsync(string osCode)
         {
+            await using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            await using var transaction = await connection.BeginTransactionAsync();
+
             try
             {
-                using var connection = new NpgsqlConnection(ConnectionString);
-                await connection.OpenAsync();
+                var registerDeletionQuery = @"INSERT INTO deleted_service_orders (os_number, deleted_at)
+                                                VALUES (@os_number, @deleted_at)
+                                                ON CONFLICT (os_number) DO NOTHING";
 
-                string registerDeletionQuery = "INSERT INTO deleted_orders (osCode) VALUES (@osCode) ON CONFLICT (osCode) DO NOTHING";
-                using var registerDeletionCommand = new NpgsqlCommand(registerDeletionQuery, connection);
-                registerDeletionCommand.Parameters.AddWithValue("osCode", osCode);
+                await using var registerDeletionCommand = new NpgsqlCommand(registerDeletionQuery, connection, transaction);
+                registerDeletionCommand.Parameters.AddWithValue("os_number", osCode);
+                registerDeletionCommand.Parameters.AddWithValue("deleted_at", DateTime.UtcNow);
                 await registerDeletionCommand.ExecuteNonQueryAsync();
 
-                string removeTagsQuery = "UPDATE salestags SET excluded = true WHERE oscode = @oscode";
-                using var removeTagsCommand = new NpgsqlCommand(removeTagsQuery, connection);
-                removeTagsCommand.Parameters.AddWithValue("oscode", osCode);
+                var removeTagsQuery = @"UPDATE sales_tags
+                                          SET excluded = true
+                                          WHERE os_number = @os_number";
+
+                await using var removeTagsCommand = new NpgsqlCommand(removeTagsQuery, connection, transaction);
+                removeTagsCommand.Parameters.AddWithValue("os_number", osCode);
                 await removeTagsCommand.ExecuteNonQueryAsync();
 
-                string removeQuery = "UPDATE serviceorders SET excluded = true WHERE numos = @oscode";
-                using var removeOsCommand = new NpgsqlCommand(removeQuery, connection);
-                removeOsCommand.Parameters.AddWithValue("oscode", osCode);
-                await removeOsCommand.ExecuteNonQueryAsync();
+                var removeQuery = @"UPDATE service_orders
+                                      SET excluded = true
+                                      WHERE os_number = @os_number";
+
+                await using var removeOsCommand = new NpgsqlCommand(removeQuery, connection, transaction);
+                removeOsCommand.Parameters.AddWithValue("os_number", osCode);
+
+                var rowsAffected = await removeOsCommand.ExecuteNonQueryAsync();
+
+                if (rowsAffected == 0)
+                {
+                    await transaction.RollbackAsync();
+                    return false;
+                }
+
+                await transaction.CommitAsync();
+                return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao remover OS {osCode}: {ex}");
+                await transaction.RollbackAsync();
+                MessageBox.Show($"Erro ao remover OS {osCode}: {ex}");
+                throw;
             }
         }
 
@@ -490,33 +501,26 @@ namespace NeuroApp.Classes
                 await connection.OpenAsync();
 
                 string pauseQuery = @"
-                    UPDATE serviceorders
-                    SET pausedDate = @pausedDate
-                    WHERE numos = @OsCode
-                    AND pausedDate IS NULL
-                    RETURNING pausedDate";
+                    UPDATE service_orders
+                    SET paused_date = @pausedDate
+                    WHERE os_number = @os_number
+                    AND paused_date IS NULL
+                    RETURNING paused_date";
 
                 using var command = new NpgsqlCommand(pauseQuery, connection);
                 command.Parameters.AddWithValue("@pausedDate", DateTime.UtcNow);
-                command.Parameters.AddWithValue("@OsCode", osCode);
+                command.Parameters.AddWithValue("@os_number", osCode);
 
                 var result = await command.ExecuteScalarAsync();
 
-                if (status.ToString() == "Aprovado" || SalesUtils.IsLocalStatus(status.ToString()) || type == "Venda")
+                if (result != null)
                 {
-                    if (result != null)
-                    {
-                        MessageBox.Show($"OS {osCode} pausada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
-                        return true;
-                    }
-                    else
-                    {
-                        MessageBox.Show($"A OS {osCode} não pode ser pausada. Verifique se já está aprovada.", "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return false;
-                    }
+                    MessageBox.Show($"OS {osCode} pausada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return true;
                 }
                 else
                 {
+                    MessageBox.Show($"A OS {osCode} não pode ser pausada. Verifique se já está aprovada.", "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
                 }
             }
@@ -540,8 +544,8 @@ namespace NeuroApp.Classes
                 using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
-                string selectQuery = "SELECT pausedDate, deadline, status FROM serviceorders WHERE numos = @OsCode";
-                string updateQuery = "UPDATE serviceorders SET pausedDate = NULL, deadline = @newDeadline WHERE numos = @OsCode";
+                string selectQuery = "SELECT paused_date, deadline, status FROM service_orders WHERE os_number = @os_number";
+                string updateQuery = "UPDATE service_orders SET paused_date = NULL, deadline = @newDeadline WHERE os_number = @os_number";
 
                 DateTime? pausedDate = null;
                 DateTime? deadline = null;
@@ -549,12 +553,12 @@ namespace NeuroApp.Classes
 
                 using (var selectCommand = new NpgsqlCommand(selectQuery, connection))
                 {
-                    selectCommand.Parameters.AddWithValue("@OsCode", osCode);
+                    selectCommand.Parameters.AddWithValue("@os_number", osCode);
 
                     using var reader = await selectCommand.ExecuteReaderAsync();
                     if (await reader.ReadAsync())
                     {
-                        pausedDate = reader["pausedDate"] as DateTime?;
+                        pausedDate = reader["paused_date"] as DateTime?;
                         deadline = reader["deadline"] as DateTime?;
                         status = reader["status"]?.ToString();
                     }
@@ -569,8 +573,8 @@ namespace NeuroApp.Classes
                 {
                     if (!(pausedDate.Value == DateTime.Now))
                     {
-                        using var updateCommand = new NpgsqlCommand("UPDATE serviceorders SET pausedDate = NULL WHERE numos = @OsCode", connection);
-                        updateCommand.Parameters.AddWithValue("@OsCode", osCode);
+                        using var updateCommand = new NpgsqlCommand("UPDATE service_orders SET paused_date = NULL WHERE os_number = @os_number", connection);
+                        updateCommand.Parameters.AddWithValue("@os_number", osCode);
                         await updateCommand.ExecuteNonQueryAsync();
 
                         MessageBox.Show($"Os {osCode} reativada sem alteração no prazo.", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -582,7 +586,7 @@ namespace NeuroApp.Classes
 
                         using var updateCommandFinal = new NpgsqlCommand(updateQuery, connection);
                         updateCommandFinal.Parameters.AddWithValue("@newDeadline", newDeadline);
-                        updateCommandFinal.Parameters.AddWithValue("@OsCode", osCode);
+                        updateCommandFinal.Parameters.AddWithValue("@os_number", osCode);
                         await updateCommandFinal.ExecuteNonQueryAsync();
 
                         MessageBox.Show($"OS {osCode} reativada. Novo prazo: {newDeadline}", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -611,13 +615,13 @@ namespace NeuroApp.Classes
                 await connection.OpenAsync();
 
                 string updateQuery = @"
-                    UPDATE serviceorders
-                    SET ismanual = @isManual
-                    WHERE numos = @osCode AND ismanual <> @isManual";
+                    UPDATE service_orders
+                    SET is_manual = @isManual
+                    WHERE os_number = @os_number AND is_manual <> @isManual";
 
                 using var updateCommand = new NpgsqlCommand(updateQuery, connection);
                 updateCommand.Parameters.AddWithValue("isManual", isManual);
-                updateCommand.Parameters.AddWithValue("osCode", osCode);
+                updateCommand.Parameters.AddWithValue("os_number", osCode);
 
                 int rowsAffected = await updateCommand.ExecuteNonQueryAsync();
 
@@ -637,7 +641,7 @@ namespace NeuroApp.Classes
                 using var connection = new NpgsqlConnection(ConnectionString);
                     await connection.OpenAsync();
 
-                    var updateQuery = "UPDATE serviceorders SET status = @status WHERE numos = @code";
+                    var updateQuery = "UPDATE service_orders SET status = @status WHERE os_number = @code";
 
                 using var command = new NpgsqlCommand(updateQuery, connection);
                         command.Parameters.AddWithValue("@status", status);
@@ -660,7 +664,7 @@ namespace NeuroApp.Classes
                 using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
-                string query = "SELECT osCode FROM deleted_orders";
+                string query = "SELECT os_number FROM deleted_orders";
                 using var command = new NpgsqlCommand(query, connection);
 
                 var deletedCodes = new List<string>();
@@ -694,29 +698,29 @@ namespace NeuroApp.Classes
 
             using var command = new NpgsqlCommand(@"
                 UPDATE warranties SET
-                    ClientName = @ClientName,
+                    costumer = @costumer,
                     Device = @Device,
-                    ServiceDate = @ServiceDate,
-                    WarrantyEndDate = @WarrantyEndDate,
-                    WarrantyMonths = @WarrantyMonths,
-                    Observation = @Observation,
-                    SerialNumber = @SerialNumber
+                    service_date = @service_date,
+                    warranty_end = @warranty_end,
+                    warranty_length = @warranty_length,
+                    description = @description,
+                    serial_number = @serial_number
                     WHERE id = @Id", connection);
 
-            command.Parameters.AddWithValue("@ClientName", warranty.ClientName ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@costumer", warranty.Customer ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Device", warranty.Device ?? (object)DBNull.Value);
-            command.Parameters.AddWithValue("@ServiceDate", warranty.ServiceDate.Date);
-            command.Parameters.AddWithValue("@WarrantyEndDate", warranty.WarrantyEndDate.Date);
-            command.Parameters.AddWithValue("@WarrantyMonths", warranty.WarrantyMonths);
-            command.Parameters.AddWithValue("@Observation", warranty.Observation ?? (object)DBNull.Value);
-            command.Parameters.AddWithValue("@SerialNumber", warranty.SerialNumber ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@service_date", warranty.ServiceDate.Date);
+            command.Parameters.AddWithValue("@warranty_end", warranty.WarrantyEndDate.Date);
+            command.Parameters.AddWithValue("@warranty_length", warranty.WarrantyMonths);
+            command.Parameters.AddWithValue("@description", warranty.Observation ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@serial_number", warranty.SerialNumber ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Id", warranty.Id);
 
             int affectedRows = await command.ExecuteNonQueryAsync();
 
             if (affectedRows == 0)
             {
-                throw new Exception("Nenhuma garantia foi encontrada com esse número de série.");
+                throw new Exception("Nenhuma garantia encontrada com esse número de série.");
             }
         }
 
@@ -727,25 +731,26 @@ namespace NeuroApp.Classes
 
             using var command = new NpgsqlCommand(@"
                 INSERT INTO warranties
-                (ClientName, SerialNumber, Device, ServiceDate, WarrantyEndDate, WarrantyMonths, Observation)
+                (os_number, customer, serial_number, device, service_date, warranty_end, warranty_length, description)
                 VALUES
-                (@ClientName, @SerialNumber, @Device, @ServiceDate, @WarrantyEndDate, @WarrantyMonths, @Observation)
-                ON CONFLICT (SerialNumber) DO UPDATE SET
-                    ClientName = EXCLUDED.ClientName,
-                    SerialNumber = EXCLUDED.SerialNumber,
+                (@os_number, @customer, @serial_number, @device, @service_date, @warranty_end, @warranty_length, @description)
+                ON CONFLICT (serial_number) DO UPDATE SET
+                    customer = EXCLUDED.customer,
+                    serial_number = EXCLUDED.serial_number,
                     Device = EXCLUDED.Device,
-                    ServiceDate = EXCLUDED.ServiceDate,
-                    WarrantyEndDate = EXCLUDED.WarrantyEndDate,
-                    WarrantyMonths = EXCLUDED.WarrantyMonths,
-                    Observation = EXCLUDED.Observation", connection);
+                    service_date = EXCLUDED.service_date,
+                    warranty_end = EXCLUDED.warranty_end,
+                    warranty_length = EXCLUDED.warranty_length,
+                    description = EXCLUDED.description", connection);
 
-            command.Parameters.AddWithValue("@ClientName", warranty.ClientName);
-            command.Parameters.AddWithValue("@SerialNumber", warranty.SerialNumber ?? (object)DBNull.Value);
-            command.Parameters.AddWithValue("@Device", warranty.Device ?? (object)DBNull.Value);
-            command.Parameters.AddWithValue("@ServiceDate", warranty.ServiceDate.Date);
-            command.Parameters.AddWithValue("@WarrantyEndDate", warranty.WarrantyEndDate.Date);
-            command.Parameters.AddWithValue("@WarrantyMonths", warranty.WarrantyMonths);
-            command.Parameters.AddWithValue("@Observation", warranty.Observation ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@os_number", warranty.OsCode ?? string.Empty);
+            command.Parameters.AddWithValue("@customer", warranty.Customer);
+            command.Parameters.AddWithValue("@serial_number", warranty.SerialNumber ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@device", warranty.Device ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@service_date", warranty.ServiceDate.Date);
+            command.Parameters.AddWithValue("@warranty_end", warranty.WarrantyEndDate.Date);
+            command.Parameters.AddWithValue("@warranty_length", warranty.WarrantyMonths);
+            command.Parameters.AddWithValue("@description", warranty.Observation ?? (object)DBNull.Value);
 
             await command.ExecuteNonQueryAsync();
         }
@@ -757,7 +762,7 @@ namespace NeuroApp.Classes
             using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
 
-            using var command = new NpgsqlCommand("SELECT * FROM Warranties ORDER BY WarrantyEndDate ASC", connection);
+            using var command = new NpgsqlCommand("SELECT * FROM Warranties ORDER BY warranty_end ASC", connection);
 
             using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -765,49 +770,64 @@ namespace NeuroApp.Classes
                 warranties.Add(new Warranty
                 {
                     Id = reader.GetInt32("id"),
-                    OsCode = reader["OsCode"].ToString(),
-                    ClientName = reader["ClientName"].ToString(),
-                    SerialNumber = reader["SerialNumber"]?.ToString(),
+                    OsCode = reader["os_number"].ToString(),
+                    Customer = reader["customer"].ToString(),
+                    SerialNumber = reader["serial_number"]?.ToString(),
                     Device = reader["Device"]?.ToString(),
-                    ServiceDate = reader.GetDateTime(reader.GetOrdinal("ServiceDate")),
-                    WarrantyEndDate = reader.GetDateTime(reader.GetOrdinal("WarrantyEndDate")),
-                    WarrantyMonths = reader.GetInt32(reader.GetOrdinal("WarrantyMonths")),
-                    Observation = reader["Observation"]?.ToString()
+                    ServiceDate = reader.GetDateTime(reader.GetOrdinal("service_date")),
+                    WarrantyEndDate = reader.GetDateTime(reader.GetOrdinal("warranty_end")),
+                    WarrantyMonths = reader.GetInt32(reader.GetOrdinal("warranty_length")),
+                    Observation = reader["description"]?.ToString()
                 });
             }
 
             return warranties;
         }
 
-        public async Task<List<Warranty>> GetWarrantyBySearchAsync(string searchText)
+        public async Task<List<Warranty>> GetWarrantyBySearchAsync(string searchText, CancellationToken token = default)
         {
             var warranties = new List<Warranty>();
 
-            using var connection = new NpgsqlConnection(ConnectionString);
-            await connection.OpenAsync();
-
-            using var command = new NpgsqlCommand(
-                @"SELECT * FROM Warranties WHERE serialnumber LIKE '%' || :SearchText || '%'",
-                connection
-            );
-            
-            command.Parameters.AddWithValue(":SearchText", searchText);
-
-            using var reader = await command.ExecuteReaderAsync();
-
-            while (await reader.ReadAsync())
+            try
             {
-                warranties.Add(new Warranty
+                using var connection = new NpgsqlConnection(ConnectionString);
+                await connection.OpenAsync(token);
+
+                using var command = new NpgsqlCommand(
+                @"SELECT * FROM Warranties
+                  WHERE serial_number LIKE '%' || :SearchText || '%'
+                     OR os_number LIKE '%' || :SearchText || '%'
+                     OR customer LIKE '%' || :SearchText || '%'",
+                connection);
+
+                command.Parameters.AddWithValue(":SearchText", searchText);
+
+                using var reader = await command.ExecuteReaderAsync(token);
+
+                while (await reader.ReadAsync(token))
                 {
-                    OsCode = reader["OsCode"].ToString(),
-                    ClientName = reader["ClientName"].ToString(),
-                    SerialNumber = reader["SerialNumber"]?.ToString(),
-                    Device = reader["Device"]?.ToString(),
-                    ServiceDate = reader.GetDateTime(reader.GetOrdinal("ServiceDate")),
-                    WarrantyEndDate = reader.GetDateTime(reader.GetOrdinal("WarrantyEndDate")),
-                    WarrantyMonths = reader.GetInt32(reader.GetOrdinal("WarrantyMonths")),
-                    Observation = reader["Observation"]?.ToString()
-                });
+                    token.ThrowIfCancellationRequested();
+
+                    warranties.Add(new Warranty
+                    {
+                        OsCode = reader["os_number"].ToString(),
+                        Customer = reader["customer"].ToString(),
+                        SerialNumber = reader["serial_number"]?.ToString(),
+                        Device = reader["Device"]?.ToString(),
+                        ServiceDate = reader.GetDateTime(reader.GetOrdinal("service_date")),
+                        WarrantyEndDate = reader.GetDateTime(reader.GetOrdinal("warranty_end")),
+                        WarrantyMonths = reader.GetInt32(reader.GetOrdinal("warranty_length")),
+                        Observation = reader["description"]?.ToString()
+                    });
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return new List<Warranty>();
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
 
             return warranties;
@@ -818,8 +838,8 @@ namespace NeuroApp.Classes
             using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
 
-            using var command = new NpgsqlCommand("DELETE FROM Warranties WHERE OsCode = @OsCode", connection);
-            command.Parameters.AddWithValue("@OsCode", osCode);
+            using var command = new NpgsqlCommand("DELETE FROM Warranties WHERE os_number = @os_number", connection);
+            command.Parameters.AddWithValue("@os_number", osCode);
 
             await command.ExecuteNonQueryAsync();
         }
@@ -829,8 +849,8 @@ namespace NeuroApp.Classes
             using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
 
-            using var command = new NpgsqlCommand("DELETE FROM Warranties WHERE serialnumber = @SerialNumber", connection);
-            command.Parameters.AddWithValue("@SerialNumber", serialNumber);
+            using var command = new NpgsqlCommand("DELETE FROM Warranties WHERE serial_number = @serial_number", connection);
+            command.Parameters.AddWithValue("@serial_number", serialNumber);
 
             await command.ExecuteNonQueryAsync();
         }

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -6,9 +7,12 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using NeuroApp.Classes;
 using NeuroApp.Interfaces;
+using NeuroApp.Services;
+using Serilog;
 
 namespace NeuroApp
 {
@@ -20,22 +24,28 @@ namespace NeuroApp
         private DatabaseActions _actions;
         public ObservableCollection<Warranty> Warranties { get; set; }
         private bool _isLoading = false;
+        private readonly Serilog.ILogger _logger;
 
         public WarrantyScreen(IMainViewModel mainViewModel, IConfiguration configuration)
         {
             InitializeComponent();
             _configuration = configuration;
             _mainViewModel = mainViewModel;
+
+            _logger = Log.ForContext<WarrantyScreen>();
+            _logger.Information("WarrantyScreen inicializado");
+
             _actions = new DatabaseActions(_configuration);
             Warranties = new ObservableCollection<Warranty>();
             DataContext = this;
-            LoadWarrantiesAsync();
 
             _searchTimer = new DispatcherTimer()
             {
                 Interval = TimeSpan.FromMilliseconds(500)
             };
             _searchTimer.Tick += DebouncerTimer_Tick;
+
+            LoadWarrantiesAsync();
         }
 
         private ObservableCollection<Warranty> oldWarranties = new ObservableCollection<Warranty>();
@@ -170,27 +180,83 @@ namespace NeuroApp
         private async void DebouncerTimer_Tick(object sender, EventArgs e)
         {
             _searchTimer.Stop();
-            string searchText = SearchBar.Text.Trim();
 
-            if (string.IsNullOrEmpty(searchText))
+            try
             {
-                Dispatcher.Invoke(() => WarrantyDataGrid.ItemsSource = oldWarranties);
+                var searchText = SearchBar.Text.Trim();
+
+                if (string.IsNullOrEmpty(searchText))
+                {
+                    await ResetToFullListAsync();
+                    return;
+                }
+
+                if (searchText.Length < 2)
+                {
+                    return;
+                }
+
+                var stopwatch = Stopwatch.StartNew();
+                var results = await _actions.GetWarrantyBySearchAsync(searchText, _token.Token);
+
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    WarrantyDataGrid.ItemsSource = results;
+                });
             }
-            else if (searchText.Length >= 2)
+            catch (OperationCanceledException)
             {
-                var results = await _actions.GetWarrantyBySearchAsync(searchText);
-                Dispatcher.Invoke(() => WarrantyDataGrid.ItemsSource = results);
+                MessageBox.Show("Busca cancelada!", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-            else
+            catch (Exception ex)
             {
-                Dispatcher.Invoke(() => WarrantyDataGrid.ItemsSource = null);
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    MessageBox.Show("Erro ao realizar busca", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
             }
         }
 
+        private CancellationTokenSource _token;
         private async void SearchBar_TextChanged(object sender, TextChangedEventArgs e)
         {
-            _searchTimer.Stop();
-            _searchTimer.Start();
+            try
+            {
+                _logger.Debug("TextChanged disparado. Texto: {Text}", SearchBar.Text);
+
+                _token?.Cancel();
+                _token = new CancellationTokenSource();
+
+                _searchTimer.Stop();
+
+                if (string.IsNullOrEmpty(SearchBar.Text))
+                {
+                    _logger.Debug("Texto vazio - resetando para lista completa");
+                    await ResetToFullListAsync();
+                    return;
+                }
+
+                _searchTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task ResetToFullListAsync()
+        {
+            try
+            {
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    WarrantyDataGrid.ItemsSource = oldWarranties;
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 } 

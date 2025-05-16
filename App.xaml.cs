@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Serilog;
 
 namespace NeuroApp
 {
@@ -100,6 +101,29 @@ namespace NeuroApp
                 loginWindow?.Show();
             }
 
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.File(
+                    path: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                                     "Neurograff", "SCN", "logs", "log-.txt"),
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: 7,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+                .CreateLogger();
+
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                var exception = (Exception)args.ExceptionObject;
+                Log.Fatal(exception, "Exceção não tratada encerrou a aplicação");
+                Log.CloseAndFlush();
+            };
+
+            DispatcherUnhandledException += (sender, args) =>
+            {
+                Log.Error(args.Exception, "Exceção não tratada na thread da UI");
+                args.Handled = true;
+            };
+
         }
 
         private bool ValidateToken(string username, string authToken)
@@ -111,7 +135,7 @@ namespace NeuroApp
 
         protected override void OnExit(ExitEventArgs e)
         {
-            LoggingService.LogInformation("Encerrando aplicação NeuroApp");
+            Log.CloseAndFlush();
             base.OnExit(e);
         }
     }
