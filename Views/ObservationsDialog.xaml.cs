@@ -1,6 +1,10 @@
 ﻿using System.Windows;
 using NeuroApp.Classes;
 using Microsoft.Extensions.Configuration;
+using System.Windows.Input;
+using System.Windows.Controls;
+using System.Windows.Media.Effects;
+using System.Windows.Media;
 
 namespace NeuroApp.Views
 {
@@ -24,6 +28,12 @@ namespace NeuroApp.Views
             }
 
             this.Closed += (sender, e) => OnClosedNotification?.Invoke();
+        }
+
+        private void Card_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            base.OnMouseLeftButtonDown(e);
+            DragMove();
         }
 
         private async void AddObservationButton_Click(object sender, RoutedEventArgs e)
@@ -71,6 +81,14 @@ namespace NeuroApp.Views
         private void BtnExit_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void ObservationTextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            (ObservationTextBox.Effect as DropShadowEffect).Color = Colors.LightBlue;
+            (ObservationTextBox.Effect as DropShadowEffect).ShadowDepth = 0;
+            (ObservationTextBox.Effect as DropShadowEffect).BlurRadius = 15;
+            (ObservationTextBox.Effect as DropShadowEffect).Opacity = 0.9;
         }
     }
 }

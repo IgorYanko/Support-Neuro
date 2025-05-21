@@ -502,10 +502,7 @@ namespace NeuroApp
             if (dialog.ShowDialog() == true)
             {
                 await RemoveOsAndUpdateUI(selectedSale.Code, selectedSale);
-                MessageBox.Show("OS removida e garantia registrada com sucesso!",
-                               "Sucesso",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Information);
+                MessageBox.Show("OS removida e garantia registrada com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -520,10 +517,7 @@ namespace NeuroApp
             if (confirmResult == MessageBoxResult.Yes)
             {
                 await RemoveOsAndUpdateUI(selectedSale.Code, selectedSale);
-                MessageBox.Show("OS removida com sucesso!",
-                               "Sucesso",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Information);
+                MessageBox.Show("OS removida com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 

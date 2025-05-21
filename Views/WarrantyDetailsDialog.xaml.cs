@@ -1,5 +1,8 @@
 using System;
+using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Extensions.Configuration;
 using NeuroApp.Classes;
@@ -21,40 +24,51 @@ namespace NeuroApp
             this.Closed += (sender, e) => OnClosedNotification?.Invoke();
         }
 
-        private void WarrantyTypeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void WarrantyTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (WarrantyTypeComboBox.SelectedIndex == 0)
             {
                 WarrantyMonthsTextBox.Text = "3";
+                WarrantyMonthsTextBox.IsReadOnly = true;
             }
             else if (WarrantyTypeComboBox.SelectedIndex == 1)
             {
                 WarrantyMonthsTextBox.Text = "12";
+                WarrantyMonthsTextBox.IsReadOnly = true;
             }
             else
             {
-                
+                WarrantyMonthsTextBox.Text = string.Empty;
+                WarrantyMonthsTextBox.IsReadOnly = false;
             }
+        }
+
+        private void IsNumberValidation(object sender, TextCompositionEventArgs e)
+        {
+            Regex regex = new("[^0-9]+");
+            e.Handled = regex.IsMatch(e.Text);
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            Close();
+            this.Close();
         }
 
-        private void Overlay_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Card_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            Close();
+            base.OnMouseLeftButtonDown(e);
+            DragMove();
         }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (!AreRequiredFieldsValid())
+                var errorMessage = GetValidationErrorMessage();
+                if (!string.IsNullOrEmpty(errorMessage))
                 {
                     HighlightEmptyFields();
-                    MessageBox.Show("Preencha todos os campos obrigatórios!", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(errorMessage, "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -66,6 +80,7 @@ namespace NeuroApp
                              : _actions.UpdateWarrantyAsync(_warranty));
 
                 MessageBox.Show("Garantia Salva com sucesso!", "Mensagem", MessageBoxButton.OK, MessageBoxImage.Information);
+                this.Close();
             }
             catch (Exception ex)
             {
@@ -73,13 +88,45 @@ namespace NeuroApp
             }
         }
 
-        private bool AreRequiredFieldsValid()
+        private string GetValidationErrorMessage()
         {
-            return !string.IsNullOrEmpty(ClientNameTextBox.Text) &&
-                   !string.IsNullOrEmpty(SerialNumberTextBox.Text) &&
-                   !string.IsNullOrEmpty(DeviceTextBox.Text) &&
-                   !string.IsNullOrEmpty(ObservationsTextBox.Text); /*&&
-                   DateTime.TryParse(ServiceDatePicker.SelectedDate, out _);*/
+            int? warrantyMonths = null;
+            if (int.TryParse(WarrantyMonthsTextBox.Text, out int parsedWarrantyMonths))
+            {
+                warrantyMonths = parsedWarrantyMonths;
+            }
+
+            if (warrantyMonths != null && (warrantyMonths < 1 || warrantyMonths > 12))
+            {
+                return "A garantia deve variar entre 1 e 12 meses";
+            }
+
+            var invalidFields= new List<string>();
+
+            var requiredFields = new List<(string FieldName, Func<bool> IsValid)>
+            {
+                ("Nome do cliente", () => !string.IsNullOrEmpty(ClientNameTextBox.Text)),
+                ("Número de série", () => !string.IsNullOrEmpty(SerialNumberTextBox.Text)),
+                ("Dispositivo", () => !string.IsNullOrEmpty(DeviceTextBox.Text)),
+                ("Observações", () => !string.IsNullOrEmpty(ObservationsTextBox.Text)),
+                ("Data do serviço", () => ServiceDatePicker.SelectedDate != null),
+                ("Meses de garantia", () => !string.IsNullOrEmpty(WarrantyMonthsTextBox.Text))
+            };
+
+            foreach (var (fieldName, isValid) in requiredFields)
+            {
+                if (!isValid())
+                {
+                    invalidFields.Add($"{fieldName}");
+                }
+            }
+
+            if (invalidFields.Any())
+            {
+                return $"Preencha os seguintes campos obrigatórios:\n\n- {string.Join("\n- ", invalidFields)}";
+            }
+
+            return null;
         }
 
         private void UpdateWarrantyFromUI(Warranty warranty)
@@ -93,23 +140,24 @@ namespace NeuroApp
             warranty.WarrantyEndDate = warranty.ServiceDate.AddMonths(warranty.WarrantyMonths);
         }
 
+        private void SetBorderstyle(FrameworkElement element, bool isInvalid)
+        {
+            if (element is Control control)
+            {
+                control.BorderBrush = isInvalid ? Brushes.Red : Brushes.Black;
+                control.BorderThickness = isInvalid ? new Thickness(1.5) : new Thickness(1);
+            }
+        }
+
         private void HighlightEmptyFields()
         {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-
-                ClientNameTextBox.BorderBrush = string.IsNullOrEmpty(ClientNameTextBox.Text)
-                    ? Brushes.Blue : Brushes.Red;
-
-                ClientNameTextBox.BorderBrush = string.IsNullOrEmpty(SerialNumberTextBox.Text)
-                    ? Brushes.Blue : Brushes.Red;
-
-                ClientNameTextBox.BorderBrush = string.IsNullOrEmpty(DeviceTextBox.Text)
-                    ? Brushes.Blue : Brushes.Red;
-
-                ClientNameTextBox.BorderBrush = string.IsNullOrEmpty(ObservationsTextBox.Text)
-                    ? Brushes.Blue : Brushes.Red;
-            });
+            SetBorderstyle(ClientNameTextBox, string.IsNullOrEmpty(ClientNameTextBox.Text));
+            SetBorderstyle(SerialNumberTextBox, string.IsNullOrEmpty(SerialNumberTextBox.Text));
+            SetBorderstyle(DeviceTextBox, string.IsNullOrEmpty(DeviceTextBox.Text));
+            SetBorderstyle(WarrantyTypeComboBox, string.IsNullOrEmpty(WarrantyTypeComboBox.Text));
+            SetBorderstyle(WarrantyMonthsTextBox, string.IsNullOrEmpty(WarrantyMonthsTextBox.Text));
+            SetBorderstyle(ObservationsTextBox, string.IsNullOrEmpty(ObservationsTextBox.Text));
+            SetBorderstyle(ServiceDatePicker, ServiceDatePicker.SelectedDate == null);
         }
     }
 } 

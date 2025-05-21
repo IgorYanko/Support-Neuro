@@ -84,10 +84,8 @@ namespace NeuroApp.Classes
         {
             DateTime currentDate = startDate;
             int addedDays = 0;
-            HashSet<DateTime> holidays = new HashSet<DateTime>();
             int currentYear = startDate.Year;
-
-            holidays.UnionWith(GetHolidays(currentYear));
+            HashSet<DateTime> holidays = GetHolidays(currentYear);
 
             while (addedDays < businessDaysToAdd)
             {
@@ -96,13 +94,11 @@ namespace NeuroApp.Classes
                 if (currentDate.Year != currentYear)
                 {
                     currentYear = currentDate.Year;
-                    holidays.UnionWith(GetHolidays(currentYear));
+                    holidays = GetHolidays(currentYear);
                 }
 
-                if (currentDate.DayOfWeek == DayOfWeek.Saturday || currentDate.DayOfWeek == DayOfWeek.Sunday)
+                if (currentDate.DayOfWeek == DayOfWeek.Saturday || currentDate.DayOfWeek == DayOfWeek.Sunday || holidays.Contains(currentDate.Date))
                     continue;
-
-                if (holidays.Contains(currentDate.Date)) continue;
 
                 addedDays++;
             }

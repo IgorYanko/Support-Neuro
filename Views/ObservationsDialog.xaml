@@ -7,59 +7,80 @@
         xmlns:local="clr-namespace:NeuroApp.Views"
         xmlns:style="clr-namespace:NeuroApp"
         mc:Ignorable="d"
-        Height="280" Width="380"
+        Height="290" Width="390"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Background="{x:Null}"
         AllowsTransparency="True"
         WindowStyle="None"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.Blue.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Lime.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
 
     <materialDesign:Card UniformCornerRadius="15" Background="{DynamicResource MaterialDesignPaper}"
-                         Margin="25" materialDesign:ShadowAssist.ShadowDepth="Depth4">
+                         Margin="25" MouseLeftButtonDown="Card_MouseLeftButtonDown" materialDesign:ShadowAssist.ShadowDepth="Depth4">
         <materialDesign:DialogHost CloseOnClickAway="False" x:Name="DialogHost">
             <StackPanel>
-                <DockPanel VerticalAlignment="Top">
-
-                    <TextBlock Text="Insira as observações:" 
-                               FontWeight="DemiBold"
-                               FontSize="18"
-                               Margin="12 10 0 0"/>
+                <Grid Margin="15 5 15 5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
                     
-                    <Button HorizontalAlignment="Right" Margin="0 10 12 0" Height="20" Width="20" Style="{StaticResource RoundedButton}"
-                            materialDesign:ButtonAssist.CornerRadius="50" x:Name="BtnExit" Click="BtnExit_Click">
-                        <materialDesign:PackIcon Kind="Close" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
+                        <TextBlock Text="Insira as observações" 
+                                   FontWeight="DemiBold"
+                                   FontSize="18"
+                                   HorizontalAlignment="Center"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="0 10 0 0"/>
 
-                </DockPanel>
+                    <TextBox x:Name="ObservationTextBox"
+                             Grid.Row="1"
+                             HorizontalAlignment="Stretch"
+                             Margin="5 15 5 10"
+                             Padding="5"
+                             MinLines="8"
+                             AcceptsReturn="True"
+                             BorderThickness="0"
+                             Background="{StaticResource MaterialDesignPaper}"
+                             GotFocus="ObservationTextBox_GotFocus"
+                             LostFocus="ObservationTextBox_LostFocus">
 
-                
+                        <TextBox.Effect>
+                            <DropShadowEffect Color="Gray"
+                                              BlurRadius="15"
+                                              ShadowDepth="0"
+                                              Opacity="0.5"/>
+                        </TextBox.Effect>
+                    </TextBox>
 
-                <TextBox x:Name="ObservationTextBox"
-                         HorizontalAlignment="Center"
-                         Margin="5 20 5 0"
-                         MinLines="6" 
-                         Width="315"
-                         AcceptsReturn="True"
-                         BorderBrush="Black"
-                         BorderThickness="0.4"/>
+                    <StackPanel Grid.Row="2"
+                                Orientation="Horizontal"
+                                Margin="0 10 0 0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom">
+                        <Button x:Name="RemoveObservationButton"
+                                Content="Cancelar"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Margin="0 0 8 0"
+                                Click="BtnExit_Click"/>
 
-                <DockPanel>
-                    <Button x:Name="AddObservationButton"
-                        Content="Adicionar"
-                        Width="110"
-                        HorizontalAlignment="Left"
-                        Height="35"
-                        Style="{StaticResource DefaultButton}"
-                        Margin="10 15 5 0" Click="AddObservationButton_Click"/>
-
-                    <Button x:Name="RemoveObservationButton"
-                            Content="Excluir"
-                            Width="110"
-                            HorizontalAlignment="Right"
-                            Height="35"
-                            Style="{StaticResource DefaultButton}"
-                            Margin="5 15 10 0" Click="RemoveObservationButton_Click"/>
-                </DockPanel>
+                        <Button x:Name="AddObservationButton"
+                                Content="Salvar"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Margin="0 0 5 0"
+                                Click="AddObservationButton_Click"/>
+                    </StackPanel>
+                </Grid>
             </StackPanel>
         </materialDesign:DialogHost>
     </materialDesign:Card>

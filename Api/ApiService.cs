@@ -1,7 +1,5 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
 namespace NeuroApp.Api
@@ -16,7 +14,7 @@ namespace NeuroApp.Api
         {
             _token = configuration.GetValue<string>("ApiSettings:SensioApiKey");
             _baseUrl = configuration.GetValue<string>("ApiSettings:BaseUrl") ?? 
-                throw new ArgumentNullException(nameof(configuration), "Base URL não configurado ou está vazio.");
+                throw new ArgumentNullException(nameof(configuration), "Base URL não configurado ou vazio.");
 
             var handler = new HttpClientHandler
             {
@@ -30,7 +28,7 @@ namespace NeuroApp.Api
             }
             else
             {
-                throw new ArgumentNullException(nameof(configuration), "Token de API não configurado ou está vazio.");
+                throw new ArgumentNullException(nameof(configuration), "Token de API não configurado ou vazio.");
             }
         }
 
@@ -40,22 +38,20 @@ namespace NeuroApp.Api
             {
                 var fullUri = $"{_baseUrl}{endpoint}";
 
-                HttpResponseMessage response = await _httpClient.GetAsync(fullUri);
+                HttpResponseMessage response = await _httpClient.GetAsync(fullUri).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {
+                    string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     string? contentType = response.Content.Headers.ContentType?.MediaType;
                     
                     if (contentType != null && contentType.Contains("application/json"))
                     {
-                        string data = await response.Content.ReadAsStringAsync();
-                        return data;
+                        return content;
                     }
                     else
                     {
-                        string htmlContent = await response.Content.ReadAsStringAsync();
-
-                        throw new Exception($"Resposta da API não é JSON. Conteúdo recebido: {htmlContent[..500]}");
+                        throw new Exception($"Resposta da API não é JSON. Conteúdo recebido: {content[..500]}");
                     }
                 }
                 else

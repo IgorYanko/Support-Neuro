@@ -3,6 +3,7 @@ using MahApps.Metro.Controls;
 using NeuroApp.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.ComponentModel;
 
 namespace NeuroApp.Views
 {
@@ -30,6 +31,12 @@ namespace NeuroApp.Views
         {
             _buttons.WindowWidth = ActualWidth;
             _buttons.WindowHeight = ActualHeight;
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+            Application.Current.Shutdown();
         }
     }
 }
