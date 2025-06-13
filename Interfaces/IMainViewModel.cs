@@ -16,6 +16,7 @@ namespace NeuroApp.Interfaces
 
         object CurrentView { get; set; }
         ObservableCollection<Sales> Sales { get; }
+        ObservableCollection<Sales> SalesData { get; set; }
         Sales SelectedSale { get; set; }
         bool IsPopupOpen { get; set; }
         ResponsiveBigButtons ResponsiveBigButtons { get; set; }

@@ -24,16 +24,12 @@ namespace NeuroApp
         private DatabaseActions _actions;
         public ObservableCollection<Warranty> Warranties { get; set; }
         private bool _isLoading = false;
-        private readonly Serilog.ILogger _logger;
 
         public WarrantyScreen(IMainViewModel mainViewModel, IConfiguration configuration)
         {
             InitializeComponent();
             _configuration = configuration;
             _mainViewModel = mainViewModel;
-
-            _logger = Log.ForContext<WarrantyScreen>();
-            _logger.Information("WarrantyScreen inicializado");
 
             _actions = new DatabaseActions(_configuration);
             Warranties = new ObservableCollection<Warranty>();
@@ -48,7 +44,7 @@ namespace NeuroApp
             LoadWarrantiesAsync();
         }
 
-        private ObservableCollection<Warranty> oldWarranties = new ObservableCollection<Warranty>();
+        private ObservableCollection<Warranty> oldWarranties = new();
 
         private async void LoadWarrantiesAsync()
         {
@@ -160,8 +156,6 @@ namespace NeuroApp
                         LoadWarrantiesAsync();
                     });
                 }
-
-                LoadWarrantiesAsync();
             }
             else
             {
@@ -222,8 +216,6 @@ namespace NeuroApp
         {
             try
             {
-                _logger.Debug("TextChanged disparado. Texto: {Text}", SearchBar.Text);
-
                 _token?.Cancel();
                 _token = new CancellationTokenSource();
 
@@ -231,7 +223,6 @@ namespace NeuroApp
 
                 if (string.IsNullOrEmpty(SearchBar.Text))
                 {
-                    _logger.Debug("Texto vazio - resetando para lista completa");
                     await ResetToFullListAsync();
                     return;
                 }

@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using System.Windows;
 using Microsoft.Extensions.Configuration;
 using NeuroApp.Interfaces;
 
@@ -39,46 +40,51 @@ namespace NeuroApp.Services
 
         public async Task<string> GetDataAsync(string endpoint)
         {
-            var cacheKey = $"api_{endpoint}";
-            return await _cacheService.GetOrSetAsync(cacheKey, async () =>
+            string cacheKey = $"api_cache_{endpoint}";
+
+            var cachedData = await _cacheService.GetAsync<string>(cacheKey);
+            if (cachedData != null)
             {
-                try
+                return cachedData;
+            }
+
+            try
+            {
+                var fullUri = $"{_baseUrl}{endpoint}";
+
+                HttpResponseMessage response = await _httpClient.GetAsync(fullUri);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    var fullUri = $"{_baseUrl}{endpoint}";
-                    LoggingService.LogDebug($"Iniciando requisição GET para: {fullUri}");
+                    string contentType = response.Content.Headers.ContentType?.MediaType;
 
-                    HttpResponseMessage response = await _httpClient.GetAsync(fullUri);
-
-                    if (response.IsSuccessStatusCode)
+                    if (contentType != null && contentType.Contains("application/json"))
                     {
-                        string contentType = response.Content.Headers.ContentType?.MediaType;
-                        
-                        if (contentType != null && contentType.Contains("application/json"))
-                        {
-                            string data = await response.Content.ReadAsStringAsync();
-                            LoggingService.LogDebug($"Resposta recebida com sucesso para: {fullUri}");
-                            return data;
-                        }
-                        else
-                        {
-                            string htmlContent = await response.Content.ReadAsStringAsync();
-                            LoggingService.LogWarning($"Resposta não é JSON para: {fullUri}. Conteúdo: {htmlContent.Substring(0, 500)}");
+                        string data = await response.Content.ReadAsStringAsync();
 
-                            throw new Exception($"Resposta da API não é JSON. Conteúdo recebido: {htmlContent.Substring(0, 500)}");
-                        }
+                        await _cacheService.SetAsync(cacheKey, data, TimeSpan.FromMinutes(5));
+
+                        return data;
                     }
                     else
                     {
-                        LoggingService.LogError($"Erro na requisição para: {fullUri}. Status: {response.StatusCode}, Razão: {response.ReasonPhrase}");
-                        throw new Exception($"Erro: {response.StatusCode}, {response.ReasonPhrase}");
+                        string htmlContent = await response.Content.ReadAsStringAsync();
+                        MessageBox.Show($"Resposta não é JSON para: {fullUri}. Conteúdo: {htmlContent.Substring(0, Math.Min(500, htmlContent.Length))}");
+
+                        throw new Exception($"Resposta da API não é JSON. Conteúdo recebido: {htmlContent.Substring(0, Math.Min(500, htmlContent.Length))}");
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    LoggingService.LogError($"Erro ao obter dados de: {endpoint}", ex);
-                    throw;
+                    MessageBox.Show($"Erro na requisição para: {fullUri}. Status: {response.StatusCode}, Razão: {response.ReasonPhrase}");
+                    throw new Exception($"Erro: {response.StatusCode}, {response.ReasonPhrase}");
                 }
-            }, TimeSpan.FromMinutes(5));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao obter dados de {endpoint}: {ex}");
+                throw;
+            }
         }
 
         public async Task InvalidateCacheAsync(string endpoint)

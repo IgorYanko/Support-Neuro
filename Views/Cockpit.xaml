@@ -45,6 +45,11 @@
                     Padding="16,0"
                     Margin="0,0,0,0"
                     Click="BackButton_Click">
+
+                <Button.Effect>
+                    <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.2"/>
+                </Button.Effect>
+                
                 <StackPanel Orientation="Horizontal">
                     <mat:PackIcon Kind="ArrowLeft" 
                                Width="24" Height="24"
@@ -62,7 +67,7 @@
                      Style="{StaticResource MaterialDesignHeadline6TextBlock}"
                      VerticalAlignment="Center"/>
 
-            <TextBlock Grid.Column="2" Width="80"/>
+            <Button x:Name="UpdateDataButton" Grid.Column="2" Width="90" Content="Atualizar" Command="{Binding UpdateCommand}"/>
         </Grid>
 
         <StackPanel Grid.Row="1" Background="#FF0078D7" Height="40" Margin="0,4,0,0">
@@ -246,11 +251,11 @@
                     </DataGridTemplateColumn>
                     
                     <DataGridTextColumn Header="Nº OS" Width="Auto" MinWidth="100" Binding="{Binding Code}" IsReadOnly="True" ElementStyle="{StaticResource DefaultCellStyle}"/>
-                    <DataGridTextColumn Header="Cliente" Width="Auto" MinWidth="210" Binding="{Binding PersonName}" IsReadOnly="True" ElementStyle="{StaticResource DefaultCellStyle}"/>
-                    <DataGridTextColumn Header="Data de Chegada" Width="*" MinWidth="90" Binding="{Binding DateCreated, StringFormat=\{0:dd/MM/yyyy\}}" IsReadOnly="True" ElementStyle="{StaticResource DefaultCellStyle}"/>
-                    <DataGridTextColumn Header="Tipo" Width="*" MinWidth="140" Binding="{Binding DisplayType}" IsReadOnly="True" ElementStyle="{StaticResource DefaultCellStyle}"/>
+                    <DataGridTextColumn Header="Cliente" Width="*" MinWidth="210" Binding="{Binding PersonName}" IsReadOnly="True" ElementStyle="{StaticResource DefaultCellStyle}"/>
+                    <DataGridTextColumn Header="Data de Chegada" Width="Auto" MinWidth="90" Binding="{Binding DateCreated, StringFormat=\{0:dd/MM/yyyy\}}" IsReadOnly="True" ElementStyle="{StaticResource DefaultCellStyle}"/>
+                    <DataGridTextColumn Header="Tipo" Width="Auto" MinWidth="140" Binding="{Binding DisplayType}" IsReadOnly="True" ElementStyle="{StaticResource DefaultCellStyle}"/>
 
-                    <DataGridTemplateColumn Header="Status" Width="*" MinWidth="165">
+                    <DataGridTemplateColumn Header="Status" Width="Auto" MinWidth="165">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding DisplayStatus}" Style="{StaticResource DefaultCellStyle}"/>
@@ -263,13 +268,12 @@
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
                                           Width="Auto"
-                                          SelectedItem="{Binding Status, Mode=TwoWay, Converter={StaticResource StatusConverter}}"
-                                          SelectionChanged="ComboBox_SelectionChanged"/>
+                                          SelectedItem="{Binding Status, Mode=TwoWay, Converter={StaticResource StatusConverter}}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Header="Tag" Width="*">
+                    <DataGridTemplateColumn Header="Tag" Width="Auto">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

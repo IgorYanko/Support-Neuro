@@ -1,0 +1,123 @@
+﻿<Window x:Class="NeuroApp.Views.GenerateProtocolDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:local="clr-namespace:NeuroApp.Views"
+        mc:Ignorable="d"
+        WindowStyle="None"
+        Background="{x:Null}"
+        AllowsTransparency="True"
+        Title="GenerateProtocolDialog" Height="480" Width="390">
+
+    <materialDesign:Card UniformCornerRadius="15" Background="{DynamicResource MaterialDesignPaper}"
+                         Margin="25" MouseLeftButtonDown="Card_MouseLeftButtonDown" materialDesign:ShadowAssist.ShadowDepth="Depth4">
+        <materialDesign:DialogHost CloseOnClickAway="False" x:Name="DialogHost">
+            <Grid>
+                <StackPanel>
+                    <DockPanel VerticalAlignment="Top">
+                        <TextBlock Text="Protocolo de atendimento"
+                                   FontWeight="DemiBold"
+                                   FontSize="18"
+                                   HorizontalAlignment="Left"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="15 20 0 0"/>
+
+                        <Button HorizontalAlignment="Right" Margin="0 10 15 0" Height="35" Width="35" Style="{StaticResource RoundedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="50" x:Name="BtnExit" Click="CloseButton_Click">
+                            <materialDesign:PackIcon Kind="Close" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </DockPanel>
+                    
+                    <TextBox x:Name="CustomerTextBox"
+                             Height="40"
+                             Width="260"
+                             Padding="10"
+                             materialDesign:HintAssist.Hint="Cliente *"
+                             Margin="25 20 25 5"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                    <TextBox x:Name="SerialNumberTextBox"
+                             Height="40"
+                             Width="260"
+                             Padding="10"
+                             materialDesign:HintAssist.Hint="Nº de Série *"
+                             Margin="25 5"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                    <ComboBox x:Name="DeviceTextBox"
+                              Height="40"
+                              Width="260"
+                              Padding="10"
+                              materialDesign:HintAssist.Hint="Aparelho *"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Margin="25 5">
+                        <ComboBoxItem Content="Video Frenzel"/>
+                        <ComboBoxItem Content="VD 360"/>
+                        <ComboBoxItem Content="Sivec Plus Vx"/>
+                        <ComboBoxItem Content="Sivec Plus Ex"/>
+                        <ComboBoxItem Content="OTO VM"/>
+                        <ComboBoxItem Content="OAT 10 Plus"/>
+                        <ComboBoxItem Content="OTO New"/>
+                        <ComboBoxItem Content="OTO 3D"/>
+                        <ComboBoxItem Content="Vecwin Plus"/>
+                        <ComboBoxItem Content="Veng"/>
+                        <ComboBoxItem Content="Vecwin STM"/>
+                        <ComboBoxItem Content="Vecto VM"/>
+                    </ComboBox>
+
+                    <TextBox x:Name="TitleTextBox"
+                             Height="40"
+                             Width="260"
+                             Padding="10"
+                             materialDesign:HintAssist.Hint="Título *"
+                             Margin="25 5"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                    <TextBox x:Name="DescriptionTextBox"
+                             Height="50"
+                             Width="260"
+                             Padding="10"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             MinLines="5"
+                             materialDesign:HintAssist.Hint="Descrição *"
+                             Margin="25 5"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="25 8 0 0">
+                            <TextBox x:Name="CodeTextBox"
+                                     Margin="15 0 5 0"
+                                     Height="40"
+                                     Width="220"
+                                     Padding="10"
+                                     IsEnabled="False"
+                                     BorderBrush="#2196F3"
+                                     materialDesign:HintAssist.Hint="Nº de protocolo"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                            <Button x:Name="GenerateProtocolCodeButton"
+                                    Margin="0"
+                                    Width="35"
+                                    Height="35"
+                                    Background="#2196F3"
+                                    Click="GenerateProtocolCode"
+                                    Style="{StaticResource MahApps.Styles.Button}">
+
+                                <materialDesign:PackIcon Kind="Autorenew"
+                                                         Foreground="White"/>
+                                
+                            </Button>
+                    </StackPanel>
+
+                    <Button x:Name="SaveProtocolButton"
+                            Margin="10 15 10 10"
+                            Content="Salvar"
+                            Width="150" Click="SaveProtocolButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </materialDesign:DialogHost>
+    </materialDesign:Card>
+</Window>

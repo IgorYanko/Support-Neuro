@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Windows;
 using Microsoft.Extensions.Configuration;
+using NeuroApp.Interfaces;
 
 namespace NeuroApp.Classes
 {
@@ -13,31 +14,25 @@ namespace NeuroApp.Classes
 
         public ConnectDB(IConfiguration configuration)
         {
-            var serverName = configuration.GetValue<string>("Database:Server") ?? "tramway.proxy.rlwy.net";
-            var port = configuration.GetValue<string>("Database:Port") ?? "37729";
-            var userName = configuration.GetValue<string>("Database:Username") ?? "postgres";
-            var password = configuration.GetValue<string>("Database:Password") ?? "JQPvHjATtKkuhdGPGUpnOIBOnJYRLHMb";
-            var databaseName = configuration.GetValue<string>("Database:Name") ?? "railway";
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
 
-            _connectionString = new NpgsqlConnectionStringBuilder
+            if (string.IsNullOrEmpty(_connectionString))
             {
-                Host = serverName,
-                Port = int.Parse(port),
-                Username = userName,
-                Password = password,
-                Database = databaseName,
-                SslMode = SslMode.Prefer,
-            }.ConnectionString;
+                throw new InvalidOperationException("A connection string 'DefaultConnection' não foi encontrada no appsettings.json.");
+            }
 
         }
 
         public string ConnectionString => _connectionString;
     }
 
-    public class DatabaseActions : ConnectDB
+    public class DatabaseActions : ConnectDB, IDatabaseActions
     {
+        private readonly IConfiguration _configuration;
+
         public DatabaseActions(IConfiguration configuration) : base(configuration)
         {
+            _configuration = configuration;
         }
 
         public async Task<(bool IsAuthenticated, string UserRole)> UserLoginAsync(string username, string acess_code)
@@ -260,12 +255,11 @@ namespace NeuroApp.Classes
                 "AprovadoQualidade" or
                 "EsperandoColeta" => 0,
                 
-                "Aprovado" => 1,
-                "Emorçamento" => 2,
-                "Pausada" => 3,
+                "Faturado" => 1,
+                "Aprovado" => 2,
+                "Emorçamento" => 3,
                 "Emaberto" => 4,
-                "Faturado" => 5,
-                _ => 6
+                _ => 5
             };
         }
 
@@ -657,17 +651,17 @@ namespace NeuroApp.Classes
             }
         }
 
-        public async Task<List<string>> GetDeletedOsCodesAsync()
+        public async Task<HashSet<string>> GetDeletedOsCodesAsync()
         {
             try
             {
                 using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
-                string query = "SELECT os_number FROM deleted_orders";
+                string query = "SELECT os_number FROM deleted_service_orders";
                 using var command = new NpgsqlCommand(query, connection);
 
-                var deletedCodes = new List<string>();
+                var deletedCodes = new HashSet<string>();
                 using var reader = await command.ExecuteReaderAsync();
 
                 while (await reader.ReadAsync())
@@ -679,7 +673,7 @@ namespace NeuroApp.Classes
             }
             catch (Exception ex)
             {
-                return new List<string>();
+                return new HashSet<string>();
             }
         }
 
@@ -851,6 +845,87 @@ namespace NeuroApp.Classes
 
             using var command = new NpgsqlCommand("DELETE FROM Warranties WHERE serial_number = @serial_number", connection);
             command.Parameters.AddWithValue("@serial_number", serialNumber);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task SaveProtocolAsync(Protocol protocol)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(@"
+                INSERT INTO protocols
+                (customer, title, serial_number, protocol_code, device, description)
+                VALUES
+                (@customer, @title, @serial_number, @protocol_code, @device, @description)", connection
+            );
+
+            command.Parameters.AddWithValue("@customer", protocol.Customer);
+            command.Parameters.AddWithValue("@title", protocol.Title);
+            command.Parameters.AddWithValue("@serial_number", protocol.SerialNumber ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@protocol_code", protocol.ProtocolCode ?? string.Empty);
+            command.Parameters.AddWithValue("@device", protocol.Device ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@description", protocol.Description ?? string.Empty);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task<List<Protocol>> GetProtocolBySearchAsync(string searchText, CancellationToken token = default)
+        {
+            var protocols = new List<Protocol>();
+
+            try
+            {
+                using var connection = new NpgsqlConnection(ConnectionString);
+                await connection.OpenAsync(token);
+
+                using var command = new NpgsqlCommand(@"
+                  SELECT * FROM protocols
+                  WHERE protocol_code LIKE @search_text || '%'
+                     OR LOWER(customer) LIKE @search_text || '%'",
+                connection);
+
+                command.Parameters.AddWithValue("@search_text", searchText);
+
+                using var reader = await command.ExecuteReaderAsync(token);
+
+                while (await reader.ReadAsync(token))
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    protocols.Add(new Protocol
+                    {
+                        Customer = reader["customer"].ToString(),
+                        Title = reader["title"].ToString(),
+                        SerialNumber = reader["serial_number"]?.ToString(),
+                        ProtocolCode = reader["protocol_code"].ToString(),
+                        Device = reader["device"]?.ToString(),
+                        Description = reader["description"].ToString()
+                    });
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return new List<Protocol>();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+            return protocols;
+        }
+
+        public async Task DeleteProtocolAsync(string protocol_code)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            string prefix = protocol_code.Substring(0, 4);
+
+            using var command = new NpgsqlCommand("DELETE FROM protocols WHERE protocol_code LIKE @prefix || '%'", connection);
+            command.Parameters.AddWithValue("@prefix", prefix);
 
             await command.ExecuteNonQueryAsync();
         }

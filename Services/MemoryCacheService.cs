@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using NeuroApp.Interfaces;
 
@@ -16,26 +17,33 @@ namespace NeuroApp.Services
             public DateTime Expiration { get; set; }
         }
 
-        public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
+        public Task<T> GetAsync<T>(string key)
         {
-            if (_cache.TryGetValue(key, out var item))
+            if (_cache.TryGetValue(key, out var cacheItem))
             {
-                if (DateTime.Now < item.Expiration)
+                if (cacheItem.Expiration > DateTime.UtcNow)
                 {
-                    return (T)item.Value;
+                    return Task.FromResult((T)cacheItem.Value);
+                }
+                else
+                {
+                    _cache.TryRemove(key, out _);
                 }
             }
 
-            var value = await factory();
-            var expirationTime = DateTime.Now.Add(expiration ?? _defaultExpiration);
+            return Task.FromResult(default(T));
+        }
 
-            _cache.AddOrUpdate(
-                key,
-                new CacheItem { Value = value, Expiration = expirationTime },
-                (_, __) => new CacheItem { Value = value, Expiration = expirationTime }
-            );
+        public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
+        {
+            var cacheItem = new CacheItem
+            {
+                Value = value,
+                Expiration = DateTime.UtcNow + (expiration ?? _defaultExpiration)
+            };
 
-            return value;
+            _cache[key] = cacheItem;
+            return Task.CompletedTask;
         }
 
         public Task RemoveAsync(string key)

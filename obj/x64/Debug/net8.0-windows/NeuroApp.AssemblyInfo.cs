@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NeuroApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b128d0462d221ba09e31bb57bcb0babea7b07942")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8a2dd9c6d064001ebd8ac73f9eb3e150a2df1a86")]
 [assembly: System.Reflection.AssemblyProductAttribute("NeuroApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NeuroApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -22,6 +22,7 @@
             
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -65,140 +66,179 @@
 
             </Grid>
 
-            <ScrollViewer Grid.Row="1" 
+            <StackPanel Grid.Row="1" HorizontalAlignment="Right" Margin="0" Orientation="Horizontal">
+                <Button x:Name="ProtocolDialogButton"
+                        Height="Auto"
+                        MaxWidth="200"
+                        Padding="8 5"
+                        Margin="5 8"
+                        Click="ProtocolDialogButton_Click">
+
+                    <StackPanel Orientation="Horizontal">
+                        <mat:PackIcon Kind="TextBox"
+                                      Width="20" Height="20"
+                                      VerticalAlignment="Center"/>
+                                        
+                        <TextBlock Text="Gerar Protocolo"
+                                   Margin="8 0 0 0"/>
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="SearchDialogButton"
+                        Height="Auto"
+                        MaxWidth="200"
+                        Padding="8 5"
+                        Margin="6 8"
+                        Click="SearchDialogButton_Click">
+
+                    <StackPanel Orientation="Horizontal">
+                        <mat:PackIcon Kind="Search"
+                                      Width="20" Height="20"
+                                      VerticalAlignment="Center"/>
+
+                        <TextBlock Text="Pesquisar Protocolo"
+                                   Margin="8 0 0 0"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="2" 
                          VerticalScrollBarVisibility="Auto"
                          Margin="16">
+
                 <UniformGrid Columns="3">
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Width="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Margin="8"
-                            Tag="Informações"
-                            Click="OpenStaticGuide_Click">
+                                Height="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Width="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Margin="8"
+                                Tag="Informações"
+                                Click="OpenStaticGuide_Click">
                         <StackPanel>
                             <materialDesign:PackIcon Kind="InformationOutline"
-                                 Height="32"
-                                 Width="32"
-                                 HorizontalAlignment="Center"
-                                 Margin="0,0,0,8"/>
+                                                         Height="32"
+                                                         Width="32"
+                                                         HorizontalAlignment="Center"
+                                                         Margin="0,0,0,8"/>
                             <TextBlock Text="Instruções Gerais"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center"/>
+                                           FontWeight="SemiBold"
+                                           FontSize="16"
+                                           HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    
+
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Width="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Margin="8"
-                            Tag="Vídeo Frenzel"
-                            Click="OpenGuide_Click">
+                                Height="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Width="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Margin="8"
+                                Tag="Vídeo Frenzel"
+                                Click="OpenGuide_Click">
                         <StackPanel>
                             <materialDesign:PackIcon Kind="Video"
-                                                   Height="32"
-                                                   Width="32"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="0,0,0,8"/>
+                                                         Height="32"
+                                                         Width="32"
+                                                         HorizontalAlignment="Center"
+                                                         Margin="0,0,0,8"/>
                             <TextBlock Text="Vídeo Frenzel"
-                                     FontSize="16"
-                                     FontWeight="SemiBold"
-                                     HorizontalAlignment="Center"/>
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Width="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Margin="8"
-                            Tag="Sivec Plus"
-                            Click="OpenGuide_Click">
+                                Height="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Width="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Margin="8"
+                                Tag="Sivec Plus"
+                                Click="OpenGuide_Click">
+
                         <StackPanel>
                             <materialDesign:PackIcon Kind="Monitor"
-                                                   Height="32"
-                                                   Width="32"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="0,0,0,8"/>
+                                                         Height="32"
+                                                         Width="32"
+                                                         HorizontalAlignment="Center"
+                                                         Margin="0,0,0,8"/>
                             <TextBlock Text="Sivec Plus"
-                                     FontSize="16"
-                                     FontWeight="SemiBold"
-                                     HorizontalAlignment="Center"/>
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Width="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Margin="8"
-                            Tag="Vecwin"
-                            Click="OpenGuide_Click">
+                                Height="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Width="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Margin="8"
+                                Tag="Vecwin"
+                                Click="OpenGuide_Click">
                         <StackPanel>
                             <materialDesign:PackIcon Kind="Stethoscope"
-                                                   Height="32"
-                                                   Width="32"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="0,0,0,8"/>
+                                                         Height="32"
+                                                         Width="32"
+                                                         HorizontalAlignment="Center"
+                                                         Margin="0,0,0,8"/>
                             <TextBlock Text="Vecwin"
-                                     FontSize="16"
-                                     FontWeight="SemiBold"
-                                     HorizontalAlignment="Center"/>
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Width="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Margin="8"
-                            Tag="Otocalorímetro"
-                            Click="OpenGuide_Click">
+                                Height="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Width="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Margin="8"
+                                Tag="Otocalorímetro"
+                                Click="OpenGuide_Click">
                         <StackPanel>
                             <materialDesign:PackIcon Kind="Temperature"
-                               Height="32"
-                               Width="32"
-                               HorizontalAlignment="Center"
-                               Margin="0,0,0,8"/>
+                                                         Height="32"
+                                                         Width="32"
+                                                         HorizontalAlignment="Center"
+                                                         Margin="0,0,0,8"/>
                             <TextBlock Text="Otocalorímetro"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center"/>
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Width="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Margin="8"
-                            Tag="Aparelhos Antigos"
-                            Click="OpenStaticGuide_Click">
+                                Height="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Width="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Margin="8"
+                                Tag="Aparelhos Antigos"
+                                Click="OpenStaticGuide_Click">
                         <StackPanel>
                             <materialDesign:PackIcon Kind="Radio"
-                           Height="32"
-                           Width="32"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,8"/>
+                                                         Height="32"
+                                                         Width="32"
+                                                         HorizontalAlignment="Center"
+                                                         Margin="0,0,0,8"/>
+
                             <TextBlock Text="Aparelhos Antigos"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center"/>
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Width="{Binding ResponsiveBigButtons.ButtonSize}"
-                            Margin="8"
-                            Tag="Coletas"
-                            Click="OpenStaticGuide_Click">
+                                Height="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Width="{Binding ResponsiveBigButtons.ButtonSize}"
+                                Margin="8"
+                                Tag="Coletas"
+                                Click="OpenStaticGuide_Click">
                         <StackPanel>
                             <materialDesign:PackIcon Kind="TruckDelivery"
-                                                     Height="32"
-                                                     Width="32"
-                                                     HorizontalAlignment="Center"
-                                                     Margin="0,0,0,8"/>
+                                                         Height="32"
+                                                         Width="32"
+                                                         HorizontalAlignment="Center"
+                                                         Margin="0,0,0,8"/>
                             <TextBlock Text="Coletas"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center"/>
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </UniformGrid>

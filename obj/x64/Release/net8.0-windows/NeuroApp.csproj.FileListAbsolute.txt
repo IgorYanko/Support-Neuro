@@ -82,3 +82,9 @@ C:\Users\supor\Source\Repos\Support-Neuro\bin\x64\Release\net8.0-windows\NeuroAp
 C:\Users\supor\Source\Repos\Support-Neuro\bin\x64\Release\net8.0-windows\NeuroApp.pdb
 C:\Users\supor\Source\Repos\Support-Neuro\obj\x64\Release\net8.0-windows\NeuroApp.genruntimeconfig.cache
 C:\Users\supor\Source\Repos\Support-Neuro\obj\x64\Release\net8.0-windows\ref\NeuroApp.dll
+C:\Users\supor\Source\Repos\Support-Neuro\obj\x64\Release\net8.0-windows\Views\GenerateProtocolDialog.g.cs
+C:\Users\supor\Source\Repos\Support-Neuro\obj\x64\Release\net8.0-windows\Views\LoadingScreen.g.cs
+C:\Users\supor\Source\Repos\Support-Neuro\obj\x64\Release\net8.0-windows\Views\SearchDialog.g.cs
+C:\Users\supor\Source\Repos\Support-Neuro\obj\x64\Release\net8.0-windows\Views\GenerateProtocolDialog.baml
+C:\Users\supor\Source\Repos\Support-Neuro\obj\x64\Release\net8.0-windows\Views\LoadingScreen.baml
+C:\Users\supor\Source\Repos\Support-Neuro\obj\x64\Release\net8.0-windows\Views\SearchDialog.baml

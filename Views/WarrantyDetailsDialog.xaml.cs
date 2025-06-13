@@ -20,6 +20,7 @@ namespace NeuroApp
         {
             InitializeComponent();
             _actions = new(configuration);
+            LoadWarrantyFields(warranty);
   
             this.Closed += (sender, e) => OnClosedNotification?.Invoke();
         }
@@ -85,6 +86,32 @@ namespace NeuroApp
             catch (Exception ex)
             {
                 MessageBox.Show($"Erro ao salvar a garantia: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void LoadWarrantyFields(Warranty warranty)
+        {
+            ClientNameTextBox.Text = warranty.Customer;
+            OsCodeTextBox.Text = warranty.OsCode;
+            SerialNumberTextBox.Text = warranty.SerialNumber;
+            DeviceTextBox.Text = warranty.Device;
+            ServiceDatePicker.Text = warranty.ServiceDate.ToString();
+            ObservationsTextBox.Text = warranty.Observation;
+
+            if (warranty.WarrantyMonths == 3)
+            {
+                WarrantyTypeComboBox.SelectedIndex = 0;
+                WarrantyMonthsTextBox.Text = warranty.WarrantyMonths.ToString();
+            }
+            else if (warranty.WarrantyMonths == 12)
+            {
+                WarrantyTypeComboBox.SelectedIndex = 1;
+                WarrantyMonthsTextBox.Text = warranty.WarrantyMonths.ToString();
+            }
+            else
+            {
+                WarrantyTypeComboBox.SelectedIndex = 2;
+                WarrantyMonthsTextBox.Text = warranty.WarrantyMonths.ToString();
             }
         }
 

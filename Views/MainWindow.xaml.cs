@@ -24,7 +24,9 @@ namespace NeuroApp.Views
             SizeChanged += ContentControl_SizeChanged;
 
             HomeScreen homeScreen = new(_mainViewModel, _configuration);
-            _mainViewModel.CurrentView = homeScreen;
+            LoadingScreen loadingScreen = new();
+
+            _mainViewModel.CurrentView = loadingScreen;
         }
 
         private void ContentControl_SizeChanged(object sender, SizeChangedEventArgs e)

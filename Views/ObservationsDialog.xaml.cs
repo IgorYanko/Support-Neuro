@@ -33,6 +33,8 @@ namespace NeuroApp.Views
         private void Card_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             base.OnMouseLeftButtonDown(e);
+            ObservationTextBox.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+            ResetTextBoxStyle();
             DragMove();
         }
 
@@ -89,6 +91,14 @@ namespace NeuroApp.Views
             (ObservationTextBox.Effect as DropShadowEffect).ShadowDepth = 0;
             (ObservationTextBox.Effect as DropShadowEffect).BlurRadius = 15;
             (ObservationTextBox.Effect as DropShadowEffect).Opacity = 0.9;
+        }
+
+        private void ResetTextBoxStyle()
+        {
+            (ObservationTextBox.Effect as DropShadowEffect).Color = Colors.Gray;
+            (ObservationTextBox.Effect as DropShadowEffect).ShadowDepth = 0;
+            (ObservationTextBox.Effect as DropShadowEffect).BlurRadius = 15;
+            (ObservationTextBox.Effect as DropShadowEffect).Opacity = 0.5;
         }
     }
 }

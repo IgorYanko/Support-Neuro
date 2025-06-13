@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 C:\Users\supor\Source\Repos\Support-Neuro\App.xaml
-12-1075526410
+15-555651835
 11000104800
-5429017635
+59630577661
 225-1392225477
-Views\ClientPage.xaml;Views\Cockpit.xaml;Views\Customers.xaml;Views\HomeScreen.xaml;Views\LoginScreen.xaml;Views\MainWindow.xaml;Views\ObservationsDialog.xaml;Views\SupportGuideDialog.xaml;Views\SupportGuideScreen.xaml;Views\SupportStaticGuideDialog.xaml;Views\WarrantyDetailsDialog.xaml;Views\WarrantyScreen.xaml;
+Views\ClientPage.xaml;Views\Cockpit.xaml;Views\Customers.xaml;Views\GenerateProtocolDialog.xaml;Views\HomeScreen.xaml;Views\LoadingScreen.xaml;Views\LoginScreen.xaml;Views\MainWindow.xaml;Views\ObservationsDialog.xaml;Views\SearchDialog.xaml;Views\SupportGuideDialog.xaml;Views\SupportGuideScreen.xaml;Views\SupportStaticGuideDialog.xaml;Views\WarrantyDetailsDialog.xaml;Views\WarrantyScreen.xaml;
 
-False
+True
 

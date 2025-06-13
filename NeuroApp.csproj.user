@@ -7,7 +7,16 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Views\GenerateProtocolDialog.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\LoadingScreen.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\ObservationsDialog.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\SearchDialog.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Views\SupportStaticGuideDialog.xaml.cs">
@@ -15,7 +24,16 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Views\GenerateProtocolDialog.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\LoadingScreen.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\ObservationsDialog.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\SearchDialog.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\SupportStaticGuideDialog.xaml">

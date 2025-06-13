@@ -44,5 +44,17 @@ namespace NeuroApp
         {
             _mainViewModel.ShowHomeScreen();
         }
+
+        private void ProtocolDialogButton_Click(object sender, RoutedEventArgs e)
+        {
+            GenerateProtocolDialog dialog = new(_configuration);
+            dialog.Show();
+        }
+
+        private void SearchDialogButton_Click(object sender, RoutedEventArgs e)
+        {
+            SearchDialog searchDialog = new(_configuration);
+            searchDialog.Show();
+        }
     }
 } 

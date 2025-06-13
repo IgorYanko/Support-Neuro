@@ -38,9 +38,6 @@ namespace NeuroApp
         {
             if (await Login())
             {
-                MainWindow mainWindow = new MainWindow(_mainViewModel, _configuration);
-                _mainViewModel.CurrentView = new HomeScreen(_mainViewModel, _configuration);
-                mainWindow.Show();
                 this.Close();
             }
             else
@@ -114,9 +111,10 @@ namespace NeuroApp
             return new User(username, "password", function);
         }
 
-        public void ProcessLogin(User user)
+        public async Task ProcessLogin(User user)
         {
             PermissionSystem.Instance.SetCurrentUser(user);
+            await ((App)Application.Current).PreloadSalesDataAsync();
         }
 
         private bool AreCredentialsValid(string username, string password)

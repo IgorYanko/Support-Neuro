@@ -46,14 +46,13 @@
                     <TextBox x:Name="ObservationTextBox"
                              Grid.Row="1"
                              HorizontalAlignment="Stretch"
-                             Margin="5 15 5 10"
+                             Margin="5 20 5 10"
                              Padding="5"
                              MinLines="8"
                              AcceptsReturn="True"
                              BorderThickness="0"
                              Background="{StaticResource MaterialDesignPaper}"
-                             GotFocus="ObservationTextBox_GotFocus"
-                             LostFocus="ObservationTextBox_LostFocus">
+                             GotFocus="ObservationTextBox_GotFocus">
 
                         <TextBox.Effect>
                             <DropShadowEffect Color="Gray"
